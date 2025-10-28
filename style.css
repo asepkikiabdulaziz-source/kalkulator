@@ -1,16 +1,16 @@
 /* ========================================================== */
-/* STYLING UMUM (Dasar untuk Kalkulator) */
+/* STYLING UMUM & STRUKTUR DASAR */
 /* ========================================================== */
 
-/* Pastikan container utama menggunakan flexbox untuk tata letak kolom */
+/* Flexbox untuk Kontainer Utama (Contoh asumsi) */
 .kalkulator-container {
     display: flex;
-    flex-direction: row; /* Desktop: Menu di kiri, Simulasi di kanan */
+    flex-direction: row; 
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Pengaturan Tampilan Mobile (Menu dan Simulasi Stack Vertikal) */
+/* Mengubah layout utama menjadi vertikal (kolom) di HP */
 @media (max-width: 768px) {
     .kalkulator-container {
         flex-direction: column;
@@ -18,7 +18,7 @@
 }
 
 /* ========================================================== */
-/* PERBAIKAN TAMPILAN KERANJANG (Fokus Utama) */
+/* PERBAIKAN TAMPILAN KERANJANG DI LAYAR KECIL (MOBILE) */
 /* ========================================================== */
 
 /* Kontainer Daftar Keranjang */
@@ -28,85 +28,61 @@
     margin: 0;
 }
 
-/* Setiap Item Keranjang (LI) - Menggunakan Flexbox untuk Horizontal Layout */
-#daftarKeranjang ul.keranjang-item-list li {
-    display: flex; 
-    justify-content: space-between; /* Pisahkan info dan harga ke kiri dan kanan */
-    align-items: flex-start; /* Rata atas (jika ada pembungkusan baris) */
-    padding: 10px 0;
-    border-bottom: 1px dashed #ddd; /* Pemisah antar item */
-    margin-bottom: 5px;
-}
+/* Penerapan Flexbox pada Setiap Item Keranjang (LI) */
+@media (max-width: 768px) {
+    #daftarKeranjang ul.keranjang-item-list li {
+        display: flex; 
+        flex-direction: row; /* Wajib: Memaksa tata letak horizontal (ke samping) */
+        justify-content: space-between; /* Memisahkan info dan harga */
+        align-items: flex-start;
+        padding: 10px 5px;
+        border-bottom: 1px dashed #ddd;
+        font-size: 0.9em;
+    }
 
-/* Area Informasi Produk (Nama dan Qty) */
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-info {
-    flex: 0 0 65%; /* Mengambil 65% lebar di HP */
-    padding-right: 5px;
-}
+    /* 1. Area Informasi Produk (Nama dan Qty) */
+    #daftarKeranjang ul.keranjang-item-list li .keranjang-item-info {
+        /* Mengambil 60% lebar layar */
+        flex: 0 0 60%; 
+        padding-right: 5px;
+    }
 
-/* Nama Produk - Pastikan bisa membungkus baris jika terlalu panjang */
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-info strong {
-    display: block; 
-    font-size: 0.9em;
-    font-weight: 600;
-    line-height: 1.2;
-    white-space: normal;
-}
+    /* Nama Produk - Pastikan tidak ada `white-space: nowrap` yang membuat teks memanjang */
+    #daftarKeranjang ul.keranjang-item-list li .keranjang-item-info strong {
+        display: block; 
+        white-space: normal; /* Biarkan teks membungkus */
+        line-height: 1.2;
+    }
 
-/* Area Harga dan Tombol Detail */
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-harga {
-    flex: 0 0 35%; /* Mengambil 35% lebar sisa */
-    text-align: right; /* Rata kanan untuk angka */
-    font-size: 0.85em;
-    display: flex; /* Gunakan flex di dalam harga untuk tombol */
-    flex-direction: column; /* Susun harga dan tombol secara vertikal */
-    align-items: flex-end; /* Rata kanan semua konten di sini */
-}
+    /* 2. Area Harga dan Tombol Detail */
+    #daftarKeranjang ul.keranjang-item-list li .keranjang-item-harga {
+        /* Mengambil 40% lebar layar sisa */
+        flex: 0 0 40%;
+        text-align: right; 
+        /* Mengatur item di kolom harga (harga utama, tombol, harga bruto) */
+        display: flex; 
+        flex-direction: column; 
+        align-items: flex-end; 
+        font-size: 0.9em;
+    }
 
-/* Tampilan Harga Bruto yang dicoret */
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-harga small {
-    margin-top: 3px;
-}
-
-/* Penyesuaian Tombol Detail */
-#daftarKeranjang .detail-item-btn {
-    padding: 2px 6px;
-    font-size: 0.7em;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-top: 5px;
+    /* Tombol Detail Item */
+    #daftarKeranjang .detail-item-btn {
+        padding: 2px 4px;
+        font-size: 0.65em;
+        margin-top: 3px;
+        white-space: nowrap; /* Penting: Mencegah tombol putus baris */
+    }
 }
 
 /* ========================================================== */
-/* STYLING PANEL RINGKASAN (Summary Toggle Bar) */
+/* PERBAIKAN BILAH RINGKASAN BAWAH (SUMMARY TOGGLE BAR) */
 /* ========================================================== */
-
-.simulasi-order {
-    /* Atur tampilan panel slide-up */
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    /* ... styling lain ... */
-}
 
 #summary-toggle-bar {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Pisahkan konten ke kiri dan kanan */
     align-items: center;
-    padding: 15px;
-    background-color: #333; /* Warna gelap untuk bilah bawah */
-    color: white;
-    cursor: pointer;
-    font-size: 1.1em;
+    width: 100%;
+    /* ... styling posisi tetap ... */
 }
-
-#summary-bar-total {
-    font-weight: bold;
-    color: #ffc107; /* Warna cerah untuk total harga */
-}
-
-/* ... Tambahkan CSS lain seperti styling untuk modal, menu, dan input ... */
