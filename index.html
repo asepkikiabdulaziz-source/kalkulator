@@ -17,55 +17,95 @@
             <div class="search-container">
                 <input type="search" id="search-input" placeholder="🔍 Cari nama produk...">
             </div>
+
             <div id="menuContainer">
                 </div>
         </div>
 
         <div class="simulasi-order">
             <button id="close-summary-btn" class="close-summary">&times;</button>
-             <h2>Ringkasan Pesanan</h2>
-             <div id="keranjangContainer">
-                 <h3>Keranjang</h3>
-                 <div id="daftarKeranjang"> <p>(Keranjang kosong)</p> </div>
-             </div>
-             <div class="input-tambahan">
-                 <label for="kelasPelanggan">Kelas Loyalti:</label>
-                 <select id="kelasPelanggan"></select>
-                 <label for="inputVoucher">Voucher (Manual):</label>
-                 <input type="number" id="inputVoucher" value="0">
-                 <label></label>
-                 <button id="btn-reset" class="btn-reset">Reset Order</button>
-             </div>
-             <div id="upsellRegulerContainer">
-                 <h3>💰 Rekomendasi Reguler</h3>
-                 <ul id="daftarUpsellReguler"> <li>(Tidak ada rekomendasi)</li> </ul>
-             </div>
-             <div id="ringkasanTotal">
-                 <div class="total-grup"><div>Subtotal Bruto (Inc PPN):</div><div id="subtotalBruto">Rp 0</div></div>
-                 <div class="total-grup diskon-detail"><div>- Diskon Reguler:</div><div id="diskonReguler">Rp 0</div></div>
-                 <div class="total-grup diskon-detail"><div>- Potongan Strata:</div><div id="diskonStrata">Rp 0</div></div>
-                 <div class="total-grup diskon-detail"><div>- Potongan Tambahan:</div><div id="diskonTambahan">Rp 0</div></div>
-                 <hr>
-                 <div class="total-grup"><div>Total Faktur (DPP+PPN):</div><div id="totalFaktur">Rp 0</div></div>
-                 <hr>
-                 <div class="total-grup diskon-detail"><div>- Diskon COD:</div><div id="diskonCOD">Rp 0</div></div>
-                 <div class="total-grup diskon-detail"><div>- Potongan Voucher:</div><div id="potonganVoucher">Rp 0</div></div>
-                 <div class="total-grup nett-on-faktur"><div>Total Nett On-Faktur (Tagihan):</div><div id="totalNettOnFaktur">Rp 0</div></div>
-                 <hr>
-                 <div class="total-grup diskon-loyalitas"><div>* Simulasi Cashback Loyalti:</div><div id="diskonLoyalti">Rp 0</div></div>
-                 <div class="total-grup grand-total"><div>* Simulasi Harga Nett Akhir:</div><div id="hargaNettAkhir">Rp 0</div></div>
-             </div>
+
+            <h2>Ringkasan Pesanan</h2>
+
+            <div id="keranjangContainer">
+                <h3>Keranjang</h3>
+                <div id="daftarKeranjang">
+                    <p>(Keranjang kosong)</p>
+                </div>
+            </div>
+
+            <div class="input-tambahan">
+                <label for="kelasPelanggan">Kelas Loyalti:</label>
+                <select id="kelasPelanggan">
+                    </select>
+
+                <label for="inputVoucher">Voucher (Manual):</label>
+                <input type="number" id="inputVoucher" value="0">
+
+                <label></label> <button id="btn-reset" class="btn-reset">Reset Order</button>
+            </div>
+
+            <div id="upsellRegulerContainer">
+                <h3>💰 Rekomendasi Reguler</h3>
+                <ul id="daftarUpsellReguler">
+                    <li>(Tidak ada rekomendasi)</li>
+                </ul>
+            </div>
+
+            <div id="ringkasanTotal">
+                 <div class="total-grup">
+                    <div>Subtotal Bruto (Inc PPN):</div>
+                    <div id="subtotalBruto">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Diskon Reguler:</div>
+                    <div id="diskonReguler">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Potongan Strata:</div>
+                    <div id="diskonStrata">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Potongan Tambahan:</div>
+                    <div id="diskonTambahan">Rp 0</div>
+                </div>
+                <hr>
+                <div class="total-grup">
+                    <div>Total Faktur (DPP+PPN):</div>
+                    <div id="totalFaktur">Rp 0</div>
+                </div>
+                <hr>
+                <div class="total-grup diskon-detail">
+                    <div>- Diskon COD:</div>
+                    <div id="diskonCOD">Rp 0</div>
+                </div>
+                <div class="total-grup nett-on-faktur">
+                    <div>Total Nett On-Faktur (Tagihan):</div>
+                    <div id="totalNettOnFaktur">Rp 0</div>
+                </div>
+                 <div class="total-grup diskon-detail" style="color: #6c757d;"> <div>- Potongan Voucher (Pembayaran):</div>
+                    <div id="potonganVoucher">Rp 0</div>
+                </div>
+                <hr>
+                <div class="total-grup diskon-loyalitas">
+                    <div>* Simulasi Cashback Loyalti:</div>
+                    <div id="diskonLoyalti">Rp 0</div>
+                </div>
+                <div class="total-grup grand-total">
+                    <div>* Simulasi Harga Nett Akhir:</div>
+                    <div id="hargaNettAkhir">Rp 0</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <button id="toggle-summary-btn" class="toggle-summary-button">🛒 Lihat Ringkasan</button>
 
-    <div id="modalStrata" class="modal">
+    <div id="modalDetail" class="modal">
          <div class="modal-content">
             <span class="close-modal">&times;</span>
-            <h3 id="modalTitle">Info Promo</h3>
-            <pre id="infoStrataContent"></pre>
-        </div>
+            <h3 id="modalTitle">Detail Item</h3>
+            <pre id="modalDetailContent"></pre> </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
