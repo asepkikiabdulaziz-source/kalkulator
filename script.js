@@ -644,7 +644,7 @@ function renderSimulasi() {
     });
 
     // ... (Langkah 11-13: Perhitungan akhir dan render sudah benar)
-}
+
 
     // 11. Hitung Sisa Tagihan Akhir
     const sisaTagihan = totalNettOnFaktur - potonganVoucher;
@@ -660,6 +660,7 @@ function renderSimulasi() {
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
 c
+
 
 
 
