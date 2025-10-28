@@ -16,17 +16,20 @@ const PPN_RATE = 1.11;
 
 
 // --- Variabel Global Database ---
-let dbProduk = new Map();
-let dbReguler = [];
-let dbStrata = [];
-let dbTambahan = [];
-let promoTambahanMap = new Map();
-let dbCOD = [];
-let dbLoyalti = [];
-let keranjang = new Map();
+let dbProduk = new Map(); let dbReguler = []; let dbStrata = []; let dbTambahan = []; let promoTambahanMap = new Map(); let dbCOD = []; let dbLoyalti = []; let keranjang = new Map();
 
 // --- Elemen DOM ---
-const loadingEl = document.getElementById('loading'); const containerEl = document.querySelector('.kalkulator-container'); const menuContainerEl = document.getElementById('menuContainer'); const keranjangEl = document.getElementById('daftarKeranjang'); const kelasPelangganEl = document.getElementById('kelasPelanggan'); const inputVoucherEl = document.getElementById('inputVoucher'); const upsellRegulerEl = document.getElementById('daftarUpsellReguler'); const btnResetEl = document.getElementById('btn-reset'); const searchInputEl = document.getElementById('search-input'); const summaryPanelEl = document.querySelector('.simulasi-order'); const toggleSummaryBtn = document.getElementById('toggle-summary-btn'); const closeSummaryBtn = document.getElementById('close-summary-btn'); const modalEl = document.getElementById('modalDetail'); const modalTitleEl = document.getElementById('modalTitle'); const modalContentEl = document.getElementById('modalDetailContent'); const closeModalBtn = document.querySelector('.close-modal');
+const loadingEl = document.getElementById('loading'); const containerEl = document.querySelector('.kalkulator-container'); const menuContainerEl = document.getElementById('menuContainer'); const keranjangEl = document.getElementById('daftarKeranjang'); const kelasPelangganEl = document.getElementById('kelasPelanggan'); const inputVoucherEl = document.getElementById('inputVoucher'); const upsellRegulerEl = document.getElementById('daftarUpsellReguler'); const btnResetEl = document.getElementById('btn-reset'); const searchInputEl = document.getElementById('search-input');
+// Panel Slide-Up
+const summaryPanelEl = document.querySelector('.simulasi-order');
+// const toggleSummaryBtn = document.getElementById('toggle-summary-btn'); // Dihapus
+const closeSummaryBtn = document.getElementById('close-summary-btn');
+const summaryToggleBarEl = document.getElementById('summary-toggle-bar'); // BARU
+const summaryBarTotalEl = document.getElementById('summary-bar-total'); // BARU
+// Modal
+const modalEl = document.getElementById('modalDetail'); const modalTitleEl = document.getElementById('modalTitle'); const modalContentEl = document.getElementById('modalDetailContent'); const closeModalBtn = document.querySelector('.close-modal');
+
+// --- Elemen DOM Output ---
 const subtotalBrutoEl = document.getElementById('subtotalBruto'); const diskonRegulerEl = document.getElementById('diskonReguler'); const diskonStrataEl = document.getElementById('diskonStrata'); const diskonTambahanEl = document.getElementById('diskonTambahan'); const totalFakturEl = document.getElementById('totalFaktur'); const diskonCODEl = document.getElementById('diskonCOD'); const potonganVoucherEl = document.getElementById('potonganVoucher'); const totalNettOnFakturEl = document.getElementById('totalNettOnFaktur'); const sisaTagihanEl = document.getElementById('sisaTagihan');
 
 
@@ -36,7 +39,14 @@ function formatAngka(angka) { return new Intl.NumberFormat('id-ID', { minimumFra
 async function fetchSheetData(gid) { const url = `${GOOGLE_SHEET_URL}&gid=${gid}&single=true&output=csv`; return new Promise((resolve, reject) => { Papa.parse(url, { download: true, header: true, dynamicTyping: true, skipEmptyLines: true, complete: (results) => { console.log(`Data GID ${gid} berhasil dimuat.`); resolve(results.data); }, error: (err) => { console.error(`Gagal memuat GID ${gid}:`, err); reject(err); } }); }); }
 function cleanStrataData(data) { const strataGroups = Object.keys(data[0]).filter(k => k.toUpperCase() !== 'QTY'); return data.map(row => { if (typeof row.QTY === 'string') { row.QTY = parseInt(row.QTY.replace(/[^0-9]/g, '')) || 0; } for (const group of strataGroups) { let val = row[group]; if (typeof val === 'string') { row[group] = parseInt(val.replace(/[^0-9]/g, '')) || 0; } else if (val === null || val === undefined) { row[group] = 0; } } return row; }).sort((a, b) => a.QTY - b.QTY); }
 function cleanTierData(data, key) { return data.map(row => ({ ...row })).sort((a, b) => b[key] - a[key]); }
-function toggleSummaryPanel() { summaryPanelEl.classList.toggle('summary-visible'); const isVisible = summaryPanelEl.classList.contains('summary-visible'); toggleSummaryBtn.textContent = isVisible ? '🛒 Sembunyikan Ringkasan' : '🛒 Lihat Ringkasan'; document.body.style.overflow = isVisible ? 'hidden' : 'auto'; }
+
+// --- Toggle Panel Ringkasan (DIUPDATE) ---
+function toggleSummaryPanel() {
+    summaryPanelEl.classList.toggle('summary-visible');
+    const isVisible = summaryPanelEl.classList.contains('summary-visible');
+    // Tombol teks tidak diubah lagi
+    document.body.style.overflow = isVisible ? 'hidden' : 'auto';
+}
 
 
 // --- Fungsi Inisialisasi ---
@@ -47,7 +57,11 @@ async function init() {
         dbReguler = cleanTierData(regData, 'NOMINAL FAKTUR'); dbCOD = cleanTierData(codData, 'NOMINAL FAKTUR'); dbTambahan = tamData; promoTambahanMap.clear(); dbTambahan.forEach(promo => { if (promo.GROUP) { promoTambahanMap.set(promo.GROUP, promo); } }); dbLoyalti = loyData; dbStrata = cleanStrataData(strataData);
         buildMenu(); buildDropdowns();
         loadingEl.style.display = 'none'; containerEl.style.display = 'flex';
-        kelasPelangganEl.addEventListener('change', renderSimulasi); inputVoucherEl.addEventListener('input', renderSimulasi); closeModalBtn.addEventListener('click', () => modalEl.style.display = 'none'); window.addEventListener('click', (event) => { if (event.target == modalEl) { modalEl.style.display = 'none'; } }); btnResetEl.addEventListener('click', resetAplikasi); toggleSummaryBtn.addEventListener('click', toggleSummaryPanel); closeSummaryBtn.addEventListener('click', toggleSummaryPanel); searchInputEl.addEventListener('input', filterMenu);
+        kelasPelangganEl.addEventListener('change', renderSimulasi); inputVoucherEl.addEventListener('input', renderSimulasi); closeModalBtn.addEventListener('click', () => modalEl.style.display = 'none'); window.addEventListener('click', (event) => { if (event.target == modalEl) { modalEl.style.display = 'none'; } }); btnResetEl.addEventListener('click', resetAplikasi);
+        // Listener toggleSummaryBtn DIHAPUS
+        // BARU: Listener untuk bilah bawah
+        summaryToggleBarEl.addEventListener('click', toggleSummaryPanel);
+        closeSummaryBtn.addEventListener('click', toggleSummaryPanel); searchInputEl.addEventListener('input', filterMenu);
     } catch (error) { loadingEl.innerText = `Gagal memuat data. Periksa GID atau URL Google Sheet. Error: ${error.message}`; console.error("Kesalahan Inisialisasi:", error); }
 }
 
@@ -82,18 +96,7 @@ function renderKeranjang(totalKartonPerEceran) {
             }
         });
         itemListHTML += '</ul>';
-        let currentPotongan_bppn = 0; // Cari potongan sebelum PPN saat ini
-        const currentTierData = [...dbStrata].reverse().find(tier => qtyGrup >= tier.QTY && tier[eceran] > 0);
-        if (currentTierData) currentPotongan_bppn = currentTierData[eceran];
-        // Cari tier berikutnya dengan potongan sebelum PPN lebih tinggi
-        const nextUpsellTierData = dbStrata.find(tier => tier.QTY > qtyGrup && tier[eceran] > currentPotongan_bppn);
-        let upsellStrataHTML = '';
-        if (nextUpsellTierData) {
-            const qtyDibutuhkan = nextUpsellTierData.QTY - qtyGrup;
-            upsellStrataHTML = `<div class="keranjang-upsell-strata">📈 Tambah <strong>${formatAngka(qtyDibutuhkan)} Krt</strong> lagi (total ${nextUpsellTierData.QTY} Krt) untuk dapat potongan ${formatRupiah(nextUpsellTierData[eceran])}/Krt.</div>`; // Tampilkan potongan dari tabel
-        } else {
-            upsellStrataHTML = `<div class="keranjang-upsell-strata tertinggi">🏆 Anda sudah di tier Strata tertinggi.</div>`;
-        }
+        let currentPotongan_bppn = 0; const currentTierData = [...dbStrata].reverse().find(tier => qtyGrup >= tier.QTY && tier[eceran] > 0); if (currentTierData) currentPotongan_bppn = currentTierData[eceran]; const nextUpsellTierData = dbStrata.find(tier => tier.QTY > qtyGrup && tier[eceran] > currentPotongan_bppn); let upsellStrataHTML = ''; if (nextUpsellTierData) { const qtyDibutuhkan = nextUpsellTierData.QTY - qtyGrup; upsellStrataHTML = `<div class="keranjang-upsell-strata">📈 Tambah <strong>${formatAngka(qtyDibutuhkan)} Krt</strong> lagi (total ${nextUpsellTierData.QTY} Krt) untuk dapat potongan ${formatRupiah(nextUpsellTierData[eceran])}/Krt.</div>`; } else { upsellStrataHTML = `<div class="keranjang-upsell-strata tertinggi">🏆 Anda sudah di tier Strata tertinggi.</div>`; }
         keranjangEl.innerHTML += grupHTML + itemListHTML + upsellStrataHTML;
     }
     keranjangEl.querySelectorAll('.detail-item-btn').forEach(btn => { btn.addEventListener('click', showDiscountDetails); });
@@ -108,14 +111,12 @@ function showDiscountDetails(event) {
     const detail = keranjangItem.diskonDetail || {};
     let infoText = `Rincian Harga Nett per Karton untuk:\n${produk.NAMA_SKU_PARENT}\n--------------------------------------\n`;
     infoText += `Harga Awal (Inc PPN) : ${formatRupiah(produk.HargaKarton)}\n`;
-    infoText += `- Diskon Reguler     : ${formatRupiah(detail.regulerPerKarton || 0)}\n`; // Ini sudah Inc PPN
-    // Menampilkan potongan SEBELUM PPN
-    infoText += `- Potongan Strata    : ${formatRupiah(detail.strataPerKarton_bppn || 0)}\n`;
-    infoText += `- Potongan Tambahan  : ${formatRupiah(detail.tambahanPerKarton_bppn || 0)}\n`;
-    // Harga sebelum COD (Inc PPN)
+    infoText += `- Diskon Reguler     : ${formatRupiah(detail.regulerPerKarton || 0)}\n`;
+    infoText += `- Potongan Strata    : ${formatRupiah(detail.strataPerKarton_bppn || 0)}\n`; // Tampilkan _bppn
+    infoText += `- Potongan Tambahan  : ${formatRupiah(detail.tambahanPerKarton_bppn || 0)}\n`; // Tampilkan _bppn
     const hargaSebelumCOD = produk.HargaKarton - (detail.regulerPerKarton || 0) - (detail.strataPerKarton_bppn * PPN_RATE || 0) - (detail.tambahanPerKarton_bppn * PPN_RATE || 0);
     infoText += `--------------------------------------\nSubtotal (Inc PPN)   : ${formatRupiah(hargaSebelumCOD)}\n`;
-    infoText += `- Diskon COD         : ${formatRupiah(detail.codPerKarton || 0)}\n`; // Ini sudah Inc PPN
+    infoText += `- Diskon COD         : ${formatRupiah(detail.codPerKarton || 0)}\n`;
     infoText += `======================================\nHARGA NETT ON-FAKTUR : ${formatRupiah(detail.hargaNettKarton || 0)}\n\n`;
     if (produk.ITEM_LOYALTI === 'Y') {
         infoText += `--- Simulasi Tambahan ---\n`;
@@ -130,7 +131,7 @@ function showDiscountDetails(event) {
 // FUNGSI LOGIKA INTI
 // ==========================================================
 function renderSimulasi() {
-    // 1. Hitung Total Bruto & Agregasi (Inc PPN dan Belum PPN)
+    // 1. Hitung Total Bruto & Agregasi
     let subtotalBruto = 0; let totalNilaiLoyalti = 0; let totalBrutoPerGrup = {}; let totalKartonPerEceran = {}; let distinctItemsPerEceran = {}; let brutoPerItemLoyalti = new Map();
     let subtotalBruto_belum_ppn = 0; let totalBrutoPerGrup_belum_ppn = {};
     keranjang.forEach((item, skuKey) => { const skuString = String(skuKey); const produk = dbProduk.get(skuString); if (!produk) return; const qtyKartonValid = !isNaN(item.qtyKarton) ? item.qtyKarton : 0; const qtyBoxValid = !isNaN(item.qtyBox) ? item.qtyBox : 0; const hargaKartonValid = !isNaN(produk.HargaKarton) ? produk.HargaKarton : 0; const hargaBoxValid = !isNaN(produk.HargaBox) ? produk.HargaBox : 0; const hargaKarton_bppn = !isNaN(produk.HargaKarton_belum_ppn) ? produk.HargaKarton_belum_ppn : 0; const hargaBox_bppn = hargaKarton_bppn / (produk.BOX_PER_CRT || 1); const boxPerCrtValid = (produk.BOX_PER_CRT && !isNaN(produk.BOX_PER_CRT) && produk.BOX_PER_CRT !== 0) ? produk.BOX_PER_CRT : 1; const totalBrutoItem = (qtyKartonValid * hargaKartonValid) + (qtyBoxValid * hargaBoxValid); const totalBrutoItem_bppn = (qtyKartonValid * hargaKarton_bppn) + (qtyBoxValid * hargaBox_bppn); const totalKartonItem = qtyKartonValid + (qtyBoxValid / boxPerCrtValid); if (isNaN(totalBrutoItem) || isNaN(totalKartonItem) || isNaN(totalBrutoItem_bppn)) return; const grupReguler = produk.GROUP; const grupEceran = produk.ECERAN; if (!grupReguler || !grupEceran) return; subtotalBruto += totalBrutoItem; subtotalBruto_belum_ppn += totalBrutoItem_bppn; totalBrutoPerGrup[grupReguler] = (totalBrutoPerGrup[grupReguler] || 0) + totalBrutoItem; totalBrutoPerGrup_belum_ppn[grupReguler] = (totalBrutoPerGrup_belum_ppn[grupReguler] || 0) + totalBrutoItem_bppn; totalKartonPerEceran[grupEceran] = (totalKartonPerEceran[grupEceran] || 0) + totalKartonItem; if (!distinctItemsPerEceran[grupEceran]) distinctItemsPerEceran[grupEceran] = new Set(); distinctItemsPerEceran[grupEceran].add(skuString); if (produk.ITEM_LOYALTI === 'Y') { totalNilaiLoyalti += totalBrutoItem; brutoPerItemLoyalti.set(skuString, totalBrutoItem); } item.diskonDetail = {}; });
@@ -139,40 +140,26 @@ function renderSimulasi() {
 
     // 3. Diskon #1: Reguler (Cek Tier: Belum PPN, Hitung Diskon: Inc PPN)
     let totalDiskonReguler = 0; let persenDiskonRegulerPerGrup = {};
-    for (const grup in totalBrutoPerGrup_belum_ppn) {
-        const brutoGrup_bppn = totalBrutoPerGrup_belum_ppn[grup]; const brutoGrup_inc_ppn = totalBrutoPerGrup[grup] || 0; persenDiskonRegulerPerGrup[grup] = 0; if (dbReguler.length > 0 && !(grup in dbReguler[0])) continue;
-        const tier = dbReguler.find(t => brutoGrup_bppn >= t['NOMINAL FAKTUR']); // Cek _belum_ppn
-        if (tier && tier[grup]) { persenDiskonRegulerPerGrup[grup] = tier[grup]; totalDiskonReguler += brutoGrup_inc_ppn * tier[grup]; } // Hitung dari inc PPN
-    }
+    for (const grup in totalBrutoPerGrup_belum_ppn) { const brutoGrup_bppn = totalBrutoPerGrup_belum_ppn[grup]; const brutoGrup_inc_ppn = totalBrutoPerGrup[grup] || 0; persenDiskonRegulerPerGrup[grup] = 0; if (dbReguler.length > 0 && !(grup in dbReguler[0])) continue; const tier = dbReguler.find(t => brutoGrup_bppn >= t['NOMINAL FAKTUR']); if (tier && tier[grup]) { persenDiskonRegulerPerGrup[grup] = tier[grup]; totalDiskonReguler += brutoGrup_inc_ppn * tier[grup]; } }
     diskonRegulerEl.innerText = `- ${formatRupiah(totalDiskonReguler)}`;
 
     // 4. Diskon #2: Strata (Potongan tetap dari tabel = _bppn)
     let totalPotonganStrata_bppn = 0; let potonganStrataPerKartonPerEceran_bppn = {};
-    for (const eceran in totalKartonPerEceran) {
-        const qtyGrup = totalKartonPerEceran[eceran]; potonganStrataPerKartonPerEceran_bppn[eceran] = 0; if (dbStrata.length > 0 && !(eceran in dbStrata[0])) continue;
-        const currentTier = [...dbStrata].reverse().find(tier => qtyGrup >= tier.QTY && tier[eceran] > 0);
-        if (currentTier) { const potonganPerKarton_bppn = currentTier[eceran]; potonganStrataPerKartonPerEceran_bppn[eceran] = potonganPerKarton_bppn; totalPotonganStrata_bppn += qtyGrup * potonganPerKarton_bppn; }
-    }
-    // Tampilkan potongan SEBELUM PPN
-    diskonStrataEl.innerText = `- ${formatRupiah(totalPotonganStrata_bppn)}`;
+    for (const eceran in totalKartonPerEceran) { const qtyGrup = totalKartonPerEceran[eceran]; potonganStrataPerKartonPerEceran_bppn[eceran] = 0; if (dbStrata.length > 0 && !(eceran in dbStrata[0])) continue; const currentTier = [...dbStrata].reverse().find(tier => qtyGrup >= tier.QTY && tier[eceran] > 0); if (currentTier) { const potonganPerKarton_bppn = currentTier[eceran]; potonganStrataPerKartonPerEceran_bppn[eceran] = potonganPerKarton_bppn; totalPotonganStrata_bppn += qtyGrup * potonganPerKarton_bppn; } }
+    diskonStrataEl.innerText = `- ${formatRupiah(totalPotonganStrata_bppn)}`; // Tampilkan _bppn
 
     // 5. Diskon #3: Tambahan (Potongan tetap dari tabel = _bppn)
     let totalPotonganTambahan_bppn = 0; let potonganTambahanPerKartonPerEceran_bppn = {};
     dbTambahan.forEach(promo => { const grupPromo = promo.GROUP; const qtyMin = promo.QTY; const itemMin = promo.ITEM; const potongan_bppn = promo.POT; const qtyGroupActual = totalKartonPerEceran[grupPromo] || 0; const distinctItemsInGroup = distinctItemsPerEceran[grupPromo]?.size || 0; if (qtyGroupActual >= qtyMin && distinctItemsInGroup >= itemMin) { potonganTambahanPerKartonPerEceran_bppn[grupPromo] = (potonganTambahanPerKartonPerEceran_bppn[grupPromo] || 0) + potongan_bppn; totalPotonganTambahan_bppn += qtyGroupActual * potongan_bppn; } });
-    // Tampilkan potongan SEBELUM PPN
-    diskonTambahanEl.innerText = `- ${formatRupiah(totalPotonganTambahan_bppn)}`;
+    diskonTambahanEl.innerText = `- ${formatRupiah(totalPotonganTambahan_bppn)}`; // Tampilkan _bppn
 
     // 6. Hitung Total Faktur (Inc PPN, sebelum COD)
-    // Pengurangan Strata & Tambahan menggunakan nilai _bppn * PPN_RATE
     const totalFaktur = subtotalBruto - totalDiskonReguler - (totalPotonganStrata_bppn * PPN_RATE) - (totalPotonganTambahan_bppn * PPN_RATE);
     totalFakturEl.innerText = formatRupiah(totalFaktur);
 
     // 7. Hitung Diskon #4: COD (Cek Tier: Belum PPN, Hitung Diskon: Inc PPN dari totalFaktur)
     let totalDiskonCOD = 0; let persenCOD = 0; const metodeBayar = 'COD';
-    if (metodeBayar === 'COD') {
-        const tier = dbCOD.find(t => subtotalBruto_belum_ppn >= t['NOMINAL FAKTUR']); // Cek pakai subtotal bruto _belum_ppn
-        if (tier) { persenCOD = tier.COD; totalDiskonCOD = totalFaktur * persenCOD; } // Hitung dari totalFaktur (Inc PPN sebelum COD)
-    }
+    if (metodeBayar === 'COD') { const tier = dbCOD.find(t => subtotalBruto_belum_ppn >= t['NOMINAL FAKTUR']); if (tier) { persenCOD = tier.COD; totalDiskonCOD = totalFaktur * persenCOD; } }
     diskonCODEl.innerText = `- ${formatRupiah(totalDiskonCOD)}`;
 
     // 10a. Dapatkan persen Loyalti dulu
@@ -187,27 +174,17 @@ function renderSimulasi() {
         const diskonRegulerItem_inc_ppn = produk.HargaKarton * (persenDiskonRegulerPerGrup[grupReguler] || 0); // Inc PPN
         const potonganStrataItem_bppn = potonganStrataPerKartonPerEceran_bppn[grupEceran] || 0; // Belum PPN
         const potonganTambahanItem_bppn = potonganTambahanPerKartonPerEceran_bppn[grupEceran] || 0; // Belum PPN
-
-        // Harga setelah diskon on-faktur (Reg, Strata, Tam) per KARTON (INC PPN)
         const hargaSetelahOnFakturItem_inc_ppn = produk.HargaKarton - diskonRegulerItem_inc_ppn - (potonganStrataItem_bppn * PPN_RATE) - (potonganTambahanItem_bppn * PPN_RATE);
-
-        // Diskon COD per KARTON (INC PPN) - Proporsional dari hargaSetelahOnFakturItem
         const diskonCODItem_inc_ppn = hargaSetelahOnFakturItem_inc_ppn * persenCOD;
-
-        // Harga Nett On Faktur per KARTON (INC PPN)
-        const hargaNettKartonItem_inc_ppn = hargaSetelahOnFakturItem_inc_ppn - diskonCODItem_inc_ppn;
-
-        // Hitung Loyalti per KARTON (Basis: Nett On Faktur INC PPN)
+        const hargaNettKartonItem_inc_ppn = hargaSetelahOnFakturItem_inc_ppn - diskonCODItem_inc_ppn; // Nett On Faktur per Karton (INC PPN)
         const diskonLoyaltiItem = produk.ITEM_LOYALTI === 'Y' ? hargaNettKartonItem_inc_ppn * persenLoyalti : 0;
         const hargaNettAkhirKartonItem = hargaNettKartonItem_inc_ppn - diskonLoyaltiItem;
 
-        // Simpan detail Inc PPN dan _bppn
+        // Simpan detail
         item.diskonDetail = {
-            // Basis Belum PPN (untuk detail pop-up)
-            strataPerKarton_bppn: potonganStrataItem_bppn,
-            tambahanPerKarton_bppn: potonganTambahanItem_bppn,
-            // Basis Inc PPN (untuk tampilan & kalkulasi akhir)
             regulerPerKarton: diskonRegulerItem_inc_ppn,
+            strataPerKarton_bppn: potonganStrataItem_bppn, // Simpan _bppn untuk pop up
+            tambahanPerKarton_bppn: potonganTambahanItem_bppn, // Simpan _bppn untuk pop up
             codPerKarton: diskonCODItem_inc_ppn,
             hargaNettKarton: hargaNettKartonItem_inc_ppn,
             loyaltiPerKarton: diskonLoyaltiItem,
@@ -226,16 +203,17 @@ function renderSimulasi() {
     const hargaNettOnFaktur = totalFaktur - totalDiskonCOD; // Total Faktur dan Diskon COD sudah Inc PPN
     totalNettOnFakturEl.innerText = formatRupiah(hargaNettOnFaktur);
 
-    // 10 & 11 Dihapus dari Ringkasan Total
-
     // Hitung dan tampilkan Sisa Tagihan
     const sisaTagihan = hargaNettOnFaktur - nilaiVoucherTerpakai;
     sisaTagihanEl.innerText = formatRupiah(sisaTagihan);
+
+    // 10 & 11 (Simulasi Total) Dihapus dari tampilan
 }
 
 
 // --- Mulai aplikasi ---
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
