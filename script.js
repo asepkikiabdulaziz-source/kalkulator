@@ -202,42 +202,197 @@ function renderUpsellReguler(totalBrutoPerGrup) {
 
 
 // ==========================================================
-// FUNGSI LOGIKA INTI
+// FUNGSI LOGIKA INTI (DENGAN DEBUGGING TAMBAHAN)
 // ==========================================================
 function renderSimulasi() {
+    console.log("--- Memulai renderSimulasi ---"); // DEBUG
+
     // 1. Hitung Total Bruto & Agregasi
     let subtotalBruto = 0; let totalNilaiLoyalti = 0; let totalBrutoPerGrup = {}; let totalKartonPerEceran = {}; let distinctItemsPerEceran = {};
-    keranjang.forEach(item => { const produk = dbProduk.get(item.sku); if (!produk) return; const totalBrutoItem = (item.qtyKarton * produk.HargaKarton) + (item.qtyBox * produk.HargaBox); const totalKartonItem = item.qtyKarton + (item.qtyBox / produk.BOX_PER_CRT); const grupReguler = produk.GROUP; const grupEceran = produk.ECERAN; subtotalBruto += totalBrutoItem; totalBrutoPerGrup[grupReguler] = (totalBrutoPerGrup[grupReguler] || 0) + totalBrutoItem; totalKartonPerEceran[grupEceran] = (totalKartonPerEceran[grupEceran] || 0) + totalKartonItem; if (!distinctItemsPerEceran[grupEceran]) distinctItemsPerEceran[grupEceran] = new Set(); distinctItemsPerEceran[grupEceran].add(item.sku); if (produk.ITEM_LOYALTI === 'Y') totalNilaiLoyalti += totalBrutoItem; });
+    console.log("Keranjang saat ini:", keranjang); // DEBUG: Lihat isi keranjang
+
+    keranjang.forEach((item, sku) => { // DEBUG: Tambahkan sku
+        const produk = dbProduk.get(item.sku);
+        if (!produk) {
+            console.error(`Produk tidak ditemukan untuk SKU: ${item.sku}`); // DEBUG
+            return; // Lanjut ke item berikutnya jika produk tidak ada
+        }
+        
+        // DEBUG: Periksa nilai sebelum kalkulasi
+        console.log(`Item: ${produk.NAMA_SKU_PARENT}, Krt: ${item.qtyKarton}, Box: ${item.qtyBox}, HargaKarton: ${produk.HargaKarton}, HargaBox: ${produk.HargaBox}, BOX_PER_CRT: ${produk.BOX_PER_CRT}`);
+
+        // Pastikan nilai tidak NaN atau undefined
+        const qtyKartonValid = !isNaN(item.qtyKarton) ? item.qtyKarton : 0;
+        const qtyBoxValid = !isNaN(item.qtyBox) ? item.qtyBox : 0;
+        const hargaKartonValid = !isNaN(produk.HargaKarton) ? produk.HargaKarton : 0;
+        const hargaBoxValid = !isNaN(produk.HargaBox) ? produk.HargaBox : 0;
+        const boxPerCrtValid = (produk.BOX_PER_CRT && !isNaN(produk.BOX_PER_CRT) && produk.BOX_PER_CRT !== 0) ? produk.BOX_PER_CRT : 1; // Hindari bagi nol
+
+        const totalBrutoItem = (qtyKartonValid * hargaKartonValid) + (qtyBoxValid * hargaBoxValid);
+        const totalKartonItem = qtyKartonValid + (qtyBoxValid / boxPerCrtValid); // Gunakan boxPerCrtValid
+
+        // DEBUG: Periksa hasil kalkulasi item
+        console.log(` -> TotalBrutoItem: ${totalBrutoItem}, TotalKartonItem: ${totalKartonItem}`);
+        
+        if (isNaN(totalBrutoItem) || isNaN(totalKartonItem)) {
+             console.error(`Kesalahan kalkulasi untuk item ${produk.NAMA_SKU_PARENT}. Periksa harga/qty.`);
+             return; // Jangan lanjutkan agregasi jika ada NaN
+        }
+
+        const grupReguler = produk.GROUP; // Pastikan kolom GROUP ada
+        const grupEceran = produk.ECERAN; // Pastikan kolom ECERAN ada
+        
+        if (!grupReguler || !grupEceran) {
+             console.error(`Item ${produk.NAMA_SKU_PARENT} (SKU: ${sku}) tidak memiliki kolom GROUP atau ECERAN.`);
+             return; // Jangan lanjutkan jika grup tidak ada
+        }
+
+        subtotalBruto += totalBrutoItem;
+        totalBrutoPerGrup[grupReguler] = (totalBrutoPerGrup[grupReguler] || 0) + totalBrutoItem;
+        totalKartonPerEceran[grupEceran] = (totalKartonPerEceran[grupEceran] || 0) + totalKartonItem;
+
+        if (!distinctItemsPerEceran[grupEceran]) distinctItemsPerEceran[grupEceran] = new Set();
+        distinctItemsPerEceran[grupEceran].add(item.sku);
+
+        if (produk.ITEM_LOYALTI === 'Y') totalNilaiLoyalti += totalBrutoItem;
+    });
+
+    console.log("Subtotal Bruto:", subtotalBruto); // DEBUG
+    console.log("Total Karton per Eceran:", totalKartonPerEceran); // DEBUG
+    console.log("Total Bruto per Grup Reguler:", totalBrutoPerGrup); // DEBUG
+    console.log("Distinct Items per Eceran:", distinctItemsPerEceran); // DEBUG
+    
     subtotalBrutoEl.innerText = formatRupiah(subtotalBruto);
+    console.log("Subtotal Bruto diupdate di HTML."); // DEBUG
+
     // 2. Panggil fungsi render keranjang & upsell
     renderKeranjang(totalKartonPerEceran);
     renderUpsellReguler(totalBrutoPerGrup);
+    console.log("Keranjang & Upsell dirender."); // DEBUG
+
     // 3. Hitung Diskon #1: Reguler
-    let totalDiskonReguler = 0; for (const grup in totalBrutoPerGrup) { const brutoGrup = totalBrutoPerGrup[grup]; const tier = dbReguler.find(t => brutoGrup >= t['NOMINAL FAKTUR']); if (tier && tier[grup]) totalDiskonReguler += brutoGrup * tier[grup]; }
+    let totalDiskonReguler = 0;
+    console.log("Menghitung Diskon Reguler..."); // DEBUG
+    for (const grup in totalBrutoPerGrup) {
+        const brutoGrup = totalBrutoPerGrup[grup];
+        // DEBUG: Cek apakah kolom grup ada di dbReguler
+        if (dbReguler.length > 0 && !(grup in dbReguler[0])) {
+             console.warn(`Kolom grup '${grup}' tidak ditemukan di dbReguler.`);
+             continue;
+        }
+        const tier = dbReguler.find(t => brutoGrup >= t['NOMINAL FAKTUR']);
+        if (tier && tier[grup]) {
+             console.log(` -> Grup ${grup}: Bruto=${brutoGrup}, Tier=${tier['NOMINAL FAKTUR']}, Diskon=${tier[grup]}`); // DEBUG
+             totalDiskonReguler += brutoGrup * tier[grup];
+        } else {
+             console.log(` -> Grup ${grup}: Bruto=${brutoGrup}, Tidak ada tier ditemukan.`); // DEBUG
+        }
+    }
     diskonRegulerEl.innerText = `- ${formatRupiah(totalDiskonReguler)}`;
+    console.log("Diskon Reguler:", totalDiskonReguler); // DEBUG
+
     // 4. Hitung Diskon #2: Strata
-    let totalPotonganStrata = 0; for (const eceran in totalKartonPerEceran) { const qtyGrup = totalKartonPerEceran[eceran]; const currentTier = [...dbStrata].reverse().find(tier => qtyGrup >= tier.QTY && tier[eceran] > 0); if (currentTier) totalPotonganStrata += qtyGrup * currentTier[eceran]; }
+    let totalPotonganStrata = 0;
+    console.log("Menghitung Potongan Strata..."); // DEBUG
+    for (const eceran in totalKartonPerEceran) {
+        const qtyGrup = totalKartonPerEceran[eceran];
+        // DEBUG: Cek apakah kolom eceran ada di dbStrata
+        if (dbStrata.length > 0 && !(eceran in dbStrata[0])) {
+            console.warn(`Kolom eceran '${eceran}' tidak ditemukan di dbStrata.`);
+            continue;
+        }
+        const currentTier = [...dbStrata].reverse().find(tier =>
+            qtyGrup >= tier.QTY && tier[eceran] > 0
+        );
+        if (currentTier) {
+            console.log(` -> Eceran ${eceran}: Qty=${qtyGrup}, Tier Qty=${currentTier.QTY}, Potongan=${currentTier[eceran]}`); // DEBUG
+            totalPotonganStrata += qtyGrup * currentTier[eceran];
+        } else {
+             console.log(` -> Eceran ${eceran}: Qty=${qtyGrup}, Tidak ada tier ditemukan.`); // DEBUG
+        }
+    }
     diskonStrataEl.innerText = `- ${formatRupiah(totalPotonganStrata)}`;
+    console.log("Potongan Strata:", totalPotonganStrata); // DEBUG
+
     // 5. Hitung Diskon #3: Tambahan (Logika Diperbarui)
-    let totalPotonganTambahan = 0; dbTambahan.forEach(promo => { const grupPromo = promo.GROUP; const qtyMin = promo.QTY; const itemMin = promo.ITEM; const potongan = promo.POT; const qtyGroupActual = totalKartonPerEceran[grupPromo] || 0; const distinctItemsInGroup = distinctItemsPerEceran[grupPromo]?.size || 0; if (qtyGroupActual >= qtyMin && distinctItemsInGroup >= itemMin) { totalPotonganTambahan += qtyGroupActual * potongan; } });
+    let totalPotonganTambahan = 0;
+    console.log("Menghitung Potongan Tambahan..."); // DEBUG
+    dbTambahan.forEach(promo => {
+        const grupPromo = promo.GROUP;
+        const qtyMin = promo.QTY;
+        const itemMin = promo.ITEM;
+        const potongan = promo.POT;
+        const qtyGroupActual = totalKartonPerEceran[grupPromo] || 0;
+        const distinctItemsInGroup = distinctItemsPerEceran[grupPromo]?.size || 0;
+        
+        console.log(` -> Cek Promo Tambahan ${grupPromo}: Qty Aktual=${qtyGroupActual} (Min=${qtyMin}), Item Aktual=${distinctItemsInGroup} (Min=${itemMin})`); // DEBUG
+
+        if (qtyGroupActual >= qtyMin && distinctItemsInGroup >= itemMin) {
+            console.log(`   -> SYARAT TERPENUHI! Potongan ${potongan} x ${qtyGroupActual}`); // DEBUG
+            totalPotonganTambahan += qtyGroupActual * potongan;
+        }
+    });
     diskonTambahanEl.innerText = `- ${formatRupiah(totalPotonganTambahan)}`;
+    console.log("Potongan Tambahan:", totalPotonganTambahan); // DEBUG
+
     // 6. Hitung Total Faktur
-    const totalFaktur = subtotalBruto - totalDiskonReguler - totalPotonganStrata - totalPotonganTambahan; totalFakturEl.innerText = formatRupiah(totalFaktur);
+    const totalFaktur = subtotalBruto - totalDiskonReguler - totalPotonganStrata - totalPotonganTambahan;
+    totalFakturEl.innerText = formatRupiah(totalFaktur);
+    console.log("Total Faktur:", totalFaktur); // DEBUG
+
     // 7. Hitung Diskon #4: COD
-    let totalDiskonCOD = 0; const metodeBayar = 'COD'; if (metodeBayar === 'COD') { const tier = dbCOD.find(t => totalFaktur >= t['NOMINAL FAKTUR']); if (tier) totalDiskonCOD = totalFaktur * tier.COD; }
+    let totalDiskonCOD = 0; const metodeBayar = 'COD';
+    console.log("Menghitung Diskon COD..."); // DEBUG
+    if (metodeBayar === 'COD') {
+        const tier = dbCOD.find(t => totalFaktur >= t['NOMINAL FAKTUR']);
+        if (tier) {
+            console.log(` -> Tier COD ditemukan: ${tier.COD}`); // DEBUG
+            totalDiskonCOD = totalFaktur * tier.COD;
+        } else {
+             console.log(` -> Tidak ada tier COD ditemukan.`); // DEBUG
+        }
+    }
     diskonCODEl.innerText = `- ${formatRupiah(totalDiskonCOD)}`;
+    console.log("Diskon COD:", totalDiskonCOD); // DEBUG
+
     // 8. Hitung Diskon #5: Voucher
-    const nilaiVoucherInput = parseFloat(inputVoucherEl.value) || 0; let nilaiVoucherTerpakai = nilaiVoucherInput; if (nilaiVoucherInput > totalNilaiLoyalti) nilaiVoucherTerpakai = totalNilaiLoyalti;
+    const nilaiVoucherInput = parseFloat(inputVoucherEl.value) || 0; let nilaiVoucherTerpakai = nilaiVoucherInput;
+    console.log("Menghitung Voucher..."); // DEBUG
+    console.log(` -> Nilai Voucher Input: ${nilaiVoucherInput}, Total Nilai Loyalti: ${totalNilaiLoyalti}`); // DEBUG
+    if (nilaiVoucherInput > totalNilaiLoyalti) {
+        nilaiVoucherTerpakai = totalNilaiLoyalti;
+        console.log(`   -> Voucher dibatasi menjadi ${nilaiVoucherTerpakai}`); // DEBUG
+    }
     potonganVoucherEl.innerText = `- ${formatRupiah(nilaiVoucherTerpakai)}`;
+    console.log("Potongan Voucher:", nilaiVoucherTerpakai); // DEBUG
+
     // 9. Hitung Harga Nett (On Faktur)
-    const hargaNettOnFaktur = totalFaktur - totalDiskonCOD - nilaiVoucherTerpakai; totalNettOnFakturEl.innerText = formatRupiah(hargaNettOnFaktur);
+    const hargaNettOnFaktur = totalFaktur - totalDiskonCOD - nilaiVoucherTerpakai;
+    totalNettOnFakturEl.innerText = formatRupiah(hargaNettOnFaktur);
+    console.log("Harga Nett On Faktur:", hargaNettOnFaktur); // DEBUG
+
     // 10. Simulasi Diskon #6: Loyalti
-    let totalDiskonLoyalti = 0; const kelasLoyalti = kelasPelangganEl.value; const tierLoyalti = dbLoyalti.find(t => t.KELAS === kelasLoyalti); if (tierLoyalti) totalDiskonLoyalti = hargaNettOnFaktur * tierLoyalti.REWARD;
+    let totalDiskonLoyalti = 0; const kelasLoyalti = kelasPelangganEl.value;
+    console.log("Menghitung Diskon Loyalti..."); // DEBUG
+    console.log(` -> Kelas terpilih: ${kelasLoyalti}`); // DEBUG
+    const tierLoyalti = dbLoyalti.find(t => t.KELAS === kelasLoyalti);
+    if (tierLoyalti) {
+        console.log(` -> Tier Loyalti ditemukan: ${tierLoyalti.REWARD}`); // DEBUG
+        totalDiskonLoyalti = hargaNettOnFaktur * tierLoyalti.REWARD;
+    } else {
+        console.log(` -> Tier Loyalti tidak ditemukan/tidak dipilih.`); // DEBUG
+    }
     diskonLoyaltiEl.innerText = `(${formatRupiah(totalDiskonLoyalti)})`;
+    console.log("Diskon Loyalti:", totalDiskonLoyalti); // DEBUG
+
     // 11. Hitung Harga Nett Akhir (Simulasi)
-    const hargaNettAkhir = hargaNettOnFaktur - totalDiskonLoyalti; hargaNettAkhirEl.innerText = formatRupiah(hargaNettAkhir);
+    const hargaNettAkhir = hargaNettOnFaktur - totalDiskonLoyalti;
+    hargaNettAkhirEl.innerText = formatRupiah(hargaNettAkhir);
+    console.log("Harga Nett Akhir:", hargaNettAkhir); // DEBUG
+    console.log("--- renderSimulasi Selesai ---"); // DEBUG
 }
 
 // --- Mulai aplikasi ---
 document.addEventListener('DOMContentLoaded', init);
+
 
