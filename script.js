@@ -16,10 +16,11 @@ const PPN_RATE = 1.11;
 
 // ==========================================================
 // FILE: script.js - KALKULATOR SIMULASI DISKON GEMINI
-// LOGIKA PERBAIKAN FINAL: Qty Ganjil, Potongan Absolut (Inc PPN), dan Tampilan Loyalti Desimal.
+// LOGIKA PERBAIKAN: Menstabilkan perbandingan persentase desimal di Upsell Reguler.
 // ==========================================================
 
 
+const PPN_RATE = 1.11; 
 
 // --- Variabel Global Database ---
 let dbProduk = new Map(); 
@@ -173,12 +174,12 @@ async function init() {
             ...promo,
             QTY: parseInt(promo.QTY) || 0,
             ITEM: parseInt(promo.ITEM) || 0,
-            POT: parseFloat(promo.POT) || 0 // POTongan diperlakukan sebagai nilai ABSOLUT (Inc PPN)
+            POT: parseFloat(promo.POT) || 0 
         })); 
         promoTambahanMap.clear(); 
         dbTambahan.forEach(promo => { if (promo.GROUP) promoTambahanMap.set(promo.GROUP, promo); }); 
         dbLoyalti = loyData; 
-        dbStrata = cleanStrataData(strataData); // Nilai Strata diperlakukan sebagai ABSOLUT (Inc PPN)
+        dbStrata = cleanStrataData(strataData); 
 
         // 3. Membangun Tampilan & Listeners
         buildMenu(); 
@@ -300,7 +301,7 @@ function filterMenu() {
 function buildDropdowns() { 
     kelasPelangganEl.innerHTML = '<option value="">- Pilih Kelas -</option>'; 
     dbLoyalti.forEach(item => { 
-        // PERBAIKAN: Menggunakan toFixed(1) untuk menampilkan desimal (e.g., 1.5%)
+        // Perbaikan: Menggunakan toFixed(1) untuk menampilkan desimal
         const displayPercent = (item.REWARD * 100).toFixed(1);
         kelasPelangganEl.innerHTML += `<option value="${item.KELAS}">${item.KELAS} (${displayPercent}%)</option>`; 
     }); 
@@ -487,6 +488,8 @@ function renderKeranjang(totalKartonPerEceran) {
 
 function renderUpsellReguler(totalBrutoPerGrup_belum_ppn) { 
     let recommendations = []; 
+    // Menggunakan nilai toleransi epsilon untuk perbandingan float yang aman
+    const EPSILON = 1e-9; 
     
     for (const grup in totalBrutoPerGrup_belum_ppn) { 
         const brutoGrup_bppn = totalBrutoPerGrup_belum_ppn[grup]; 
@@ -494,20 +497,30 @@ function renderUpsellReguler(totalBrutoPerGrup_belum_ppn) {
         let currentTier = null;
         let nextTier = null;
 
-        const currentIndex = dbReguler.findIndex(t => brutoGrup_bppn >= t['NOMINAL FAKTUR'] && t.hasOwnProperty(grup) && t[grup] > 0);
+        const currentIndex = dbReguler.findIndex(t => brutoGrup_bppn >= t['NOMINAL FAKTUR'] && t.hasOwnProperty(grup) && t[grup] >= 0);
         
         if (currentIndex !== -1) {
             currentTier = dbReguler[currentIndex];
+            // Cari tier yang lebih tinggi (indeks lebih kecil) dengan diskon yang lebih besar
             if (currentIndex > 0) {
                 for(let i = currentIndex - 1; i >= 0; i--) {
-                    if (dbReguler[i][grup] > currentTier[grup]) {
+                    // Cek apakah persentase diskon tier berikutnya LEBIH BESAR secara signifikan
+                    if (dbReguler[i][grup] > (currentTier[grup] + EPSILON)) {
                         nextTier = dbReguler[i];
                         break;
                     }
                 }
             }
         } else if (dbReguler.length > 0) {
-            nextTier = dbReguler.find(t => t.hasOwnProperty(grup) && t[grup] > 0);
+            // Jika belum memenuhi tier apa pun, cari tier diskon pertama yang tersedia
+            const lowestTierIndex = dbReguler.length - 1;
+            const lowestTierDiscount = dbReguler[lowestTierIndex][grup] || 0;
+            
+            // Cek apakah ada tier yang menawarkan diskon lebih dari 0%
+            if (lowestTierDiscount > 0) {
+                // Cari tier diskon tertinggi yang belum terpenuhi (melawan urutan terbalik)
+                nextTier = [...dbReguler].reverse().find(t => t['NOMINAL FAKTUR'] > brutoGrup_bppn && t.hasOwnProperty(grup) && t[grup] > 0);
+            }
         }
 
         if (nextTier) { 
@@ -714,4 +727,5 @@ function renderSimulasi() {
 
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
+
 
