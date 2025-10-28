@@ -1,255 +1,129 @@
-/* ========================================================== */
-/* STYLING UTAMA & TATA LETAK DESKTOP (> 768px) */
-/* ========================================================== */
-
 body {
     font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
     margin: 0;
-    padding: 0;
-    background-color: #f4f4f9;
-}
-
-/* KONTEN UTAMA: Menu (Kiri) dan Simulasi (Kanan) */
-.kalkulator-container {
-    display: flex;
-    flex-direction: row; 
-    max-width: 1200px;
-    margin: 20px auto;
-    background-color: white;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    border-radius: 12px;
-    min-height: 80vh;
-}
-
-.menu-produk {
-    flex: 1; /* Mengambil 50% ruang */
     padding: 20px;
-    border-right: 1px solid #eee;
-    overflow-y: auto; /* Memungkinkan scroll pada menu produk */
+    overflow-x: hidden;
 }
-
-.simulasi-order {
-    flex: 1; /* Mengambil 50% ruang */
-    padding: 20px;
-    position: relative;
-}
-
-/* === MODAL === */
-.modal {
-    display: none; 
-    position: fixed; 
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.4);
-}
-.modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%; 
-    max-width: 500px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-}
-.close-modal {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
+#loading {
+    font-size: 1.5em;
     font-weight: bold;
-}
-.close-modal:hover, .close-modal:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-#modalDetailContent {
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 4px;
-    overflow-x: auto;
+    text-align: center;
+    margin-top: 100px;
 }
 
-/* === TAMPILAN KERANJANG (DESKTOP DEFAULT) === */
-#daftarKeranjang {
-    margin-top: 15px;
+/* --- Layout Desktop (Layar Lebar > 768px) --- */
+@media (min-width: 769px) {
+    .kalkulator-container { display: flex; gap: 20px; }
+    .menu-produk { flex: 2; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    .simulasi-order { flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; position: static; transform: none; transition: none; }
+    /* Tombol/Bilah Toggle disembunyikan di desktop */
+    .summary-bar, .close-summary { display: none; }
 }
 
-#daftarKeranjang ul.keranjang-item-list {
-    list-style: none;
-    padding: 0;
-}
-
-/* Default Desktop: Menggunakan display block/flow-root (untuk float) */
-#daftarKeranjang ul.keranjang-item-list li {
-    display: flow-root; /* Mirip clearfix untuk menampung float */
-    padding: 10px 0;
-    border-bottom: 1px dashed #ddd; 
-}
-
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-info {
-    width: 65%; 
-    float: left; /* Berdampingan dengan Harga */
-    padding-right: 10px;
-    box-sizing: border-box;
-}
-
-#daftarKeranjang ul.keranjang-item-list li .keranjang-item-harga {
-    width: 35%;
-    float: right; /* Berdampingan dengan Info */
-    text-align: right;
-    display: block; /* Mencegah konflik flex */
-    box-sizing: border-box;
-}
-
-/* Tambahan styling */
-.keranjang-grup-header {
-    background-color: #e9e9e9;
-    padding: 5px 10px;
-    font-weight: bold;
-    margin-top: 10px;
-    border-radius: 4px;
-}
-.keranjang-upsell-strata {
-    font-size: 0.85em;
-    padding: 8px;
-    background-color: #e9f7ee;
-    color: #28a745;
-    border-radius: 4px;
-    margin-top: 5px;
-}
-
-
-/* ========================================================== */
-/* STYLING KHUSUS MOBILE (MAX-WIDTH 768px) */
-/* ========================================================== */
-
+/* --- Layout Mobile (Layar Sempit <= 768px) --- */
 @media (max-width: 768px) {
-    /* Tata Letak Utama Mobile */
-    .kalkulator-container {
-        flex-direction: column;
-        margin: 0;
-        border-radius: 0;
-    }
-
-    /* Menu Produk Mobile */
-    .menu-produk {
-        height: 60vh; /* Membatasi tinggi menu agar simulasi terlihat */
-        border-right: none;
-        border-bottom: 1px solid #eee;
-        order: 1; /* Menu di atas */
-    }
-
-    /* Simulasi Order Mobile (Awalnya tersembunyi, lalu slide up) */
-    .simulasi-order {
-        /* Default state: Tersembunyi, hanya bilah toggle yang terlihat */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        height: calc(100% - 50px); /* 100% tinggi dikurangi tinggi bar toggle */
-        z-index: 99;
-        transform: translateY(100%); /* Sembunyikan panel ke bawah */
-        transition: transform 0.3s ease-in-out;
-        background-color: white;
-        overflow-y: auto;
-        padding-bottom: 70px; /* Jarak untuk bar toggle */
-        order: 2; /* Simulasi di bawah */
-    }
-
-    /* Kelas untuk menampilkan panel */
-    .simulasi-order.summary-visible {
-        transform: translateY(0); /* Geser panel ke atas */
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    
-    /* Tombol Tutup di dalam panel summary */
-    #close-summary-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 2em;
-        color: #555;
-        cursor: pointer;
-        z-index: 101;
-    }
-
-    /* Bilah Toggle Bawah (Selalu Terlihat di Mobile) */
-    #summary-toggle-bar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        z-index: 100;
-        background-color: #007bff;
-        color: white;
-        padding: 15px 20px;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    }
-    
-    /* Tombol Reset di Mobile */
-    #btn-reset {
-        width: 100%;
-        margin-top: 10px;
+    body {
         padding: 10px;
-        background-color: #dc3545;
+        /* Padding bawah = tinggi summary-bar + margin */
+        padding-bottom: 70px;
+    }
+    .kalkulator-container { display: block; position: relative; }
+    .menu-produk { width: 100%; box-sizing: border-box; margin-bottom: 20px; max-height: none; }
+    .simulasi-order { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; box-shadow: 0 -4px 10px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.3s ease-in-out; overflow-y: auto; z-index: 100; padding: 20px; box-sizing: border-box; border-top-left-radius: 15px; border-top-right-radius: 15px; }
+    .simulasi-order.summary-visible { transform: translateY(0); }
+
+    /* BARU: Style Bilah Ringkasan Bawah */
+    .summary-bar {
+        display: flex; /* Menyusun elemen secara horizontal */
+        justify-content: space-between; /* Harga kiri, panah kanan */
+        align-items: center; /* Vertikal tengah */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #0056b3; /* Biru lebih gelap */
         color: white;
-        border: none;
-        border-radius: 4px;
+        padding: 10px 15px;
+        box-sizing: border-box;
+        height: 55px; /* Sesuaikan tinggi bilah */
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
         cursor: pointer;
+        z-index: 101; /* Di atas konten, di bawah panel */
     }
-
-
-    /* === PERBAIKAN KERANJANG MOBILE (Fokus) === */
-
-    /* Item List (LI) menggunakan Flexbox di Mobile */
-    #daftarKeranjang ul.keranjang-item-list li {
-        display: flex !important; 
-        float: none !important;
-        flex-direction: row !important;
-        justify-content: space-between !important; 
-        align-items: flex-start !important;
-        padding: 10px 0 !important;
+    .summary-bar-label {
+        font-size: 0.8em;
+        opacity: 0.8;
     }
+    .summary-bar-total {
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+    .summary-bar-arrow {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    /* AKHIR BARU */
 
-    /* Info Produk di Mobile */
-    #daftarKeranjang ul.keranjang-item-list li .keranjang-item-info {
-        float: none !important;
-        flex: 0 0 60% !important; 
-        padding-right: 5px !important;
-        font-size: 0.9em !important;
-    }
-
-    /* Harga dan Tombol di Mobile */
-    #daftarKeranjang ul.keranjang-item-list li .keranjang-item-harga {
-        float: none !important;
-        flex: 0 0 40% !important;
-        text-align: right !important; 
-        
-        display: flex !important; 
-        flex-direction: column !important; 
-        align-items: flex-end !important; 
-        font-size: 0.8em !important;
-    }
-    
-    /* Tombol Detail Item */
-    .detail-item-btn {
-        padding: 2px 4px;
-        font-size: 0.65em;
-        margin-top: 3px;
-        white-space: nowrap; 
-        background-color: #007bff;
-        color: white;
-        border-radius: 3px;
-    }
+    /* Tombol Tutup Panel Ringkasan */
+    .close-summary { display: block; position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5em; line-height: 30px; text-align: center; cursor: pointer; color: #555; z-index: 102; /* Di atas panel */ }
+    /* Tombol Toggle mengambang LAMA DIHAPUS */
+    /* .toggle-summary-button { ... } */
 }
+
+/* --- Style Umum --- */
+
+/* Bilah Pencarian */
+.search-container { margin-bottom: 20px; }
+#search-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1em; }
+
+/* Tampilan Menu Item */
+.grup-produk { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+.grup-header { display: flex; justify-content: space-between; align-items: center; background-color: #e9f5ff; padding: 10px; border-radius: 5px; }
+.grup-header h3 { margin: 0; font-size: 1.1em; }
+.grup-header-tombol { display: flex; gap: 8px; }
+.promo-tambahan-btn { padding: 5px 10px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+.promo-tambahan-btn:hover { background-color: #218838; }
+.strata-info-btn { padding: 5px 10px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; font-size: 0.8em; }
+.strata-info-btn:hover { background-color: #0056b3; }
+.kartu-produk { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
+.kartu-produk:last-child { border-bottom: none; }
+.nama-item { font-size: 0.9em; font-weight: bold; flex-grow: 1; margin-right: 10px; }
+.harga-item { font-size: 0.8em; color: #555; }
+.input-qty { display: flex; gap: 5px; }
+.input-qty input { width: 50px; text-align: right; border: 1px solid #ccc; border-radius: 4px; padding: 5px; }
+.kartu-produk.hidden, .grup-produk.hidden { display: none; }
+
+/* Keranjang & Ringkasan */
+#daftarKeranjang { padding: 0; }
+.keranjang-grup-header { background: #f4f4f4; padding: 8px 10px; font-weight: bold; font-size: 0.9em; border-radius: 4px 4px 0 0; margin-top: 15px; border: 1px solid #ddd; border-bottom: none; }
+.keranjang-item-list { list-style: none; padding: 0; margin: 0; border: 1px solid #ddd; border-top: none; border-bottom: none; }
+.keranjang-item-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9em; gap: 10px; }
+.keranjang-item-info { flex-grow: 1; }
+.keranjang-item-harga { text-align: right; white-space: nowrap; }
+.detail-item-btn { background: none; border: 1px solid #007bff; color: #007bff; padding: 3px 6px; border-radius: 3px; font-size: 0.75em; cursor: pointer; margin-left: 5px; }
+.detail-item-btn:hover { background: #e9f5ff; }
+
+.keranjang-upsell-strata { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; font-size: 0.85em; color: #555; border-radius: 0 0 4px 4px; margin-bottom: 10px; border-top: 1px dashed #ffe58f; }
+.keranjang-upsell-strata strong { color: #856404; }
+.keranjang-upsell-strata.tertinggi { background: #e6ffed; border-color: #b7ebc2; color: #155724; }
+#upsellRegulerContainer { background: #e6f7ff; border: 1px solid #b3e0ff; border-radius: 5px; padding: 10px 15px; margin: 20px 0; }
+#upsellRegulerContainer h3 { margin: 0 0 10px 0; font-size: 1em; color: #004085; }
+#daftarUpsellReguler { list-style: none; padding: 0; margin: 0; }
+#daftarUpsellReguler li { font-size: 0.85em; color: #555; margin-bottom: 5px; }
+.input-tambahan { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; margin: 20px 0; background: #f9f9f9; padding: 15px; border-radius: 5px; }
+.input-tambahan label { font-weight: bold; font-size: 0.9em; }
+.input-tambahan select, .input-tambahan input { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+.btn-reset { background-color: #d9534f; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+.btn-reset:hover { background-color: #c9302c; }
+#ringkasanTotal .total-grup { display: flex; justify-content: space-between; padding: 8px 5px; font-size: 0.95em; }
+#ringkasanTotal .diskon-detail { color: #d9534f; font-size: 0.9em; }
+#ringkasanTotal .pembayaran { color: #6c757d; font-size: 0.9em;}
+#ringkasanTotal .nett-on-faktur { font-weight: bold; font-size: 1.1em; background: #f0f0f0; padding: 10px; border-radius: 4px; margin-top: 5px; }
+#ringkasanTotal .grand-total { font-weight: bold; font-size: 1.15em; background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; margin-top: 10px; }
+
+/* Modal Styling */
+.modal { display: none; position: fixed; z-index: 102; /* Lebih tinggi dari panel & bar */ left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+.close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.modal-content pre { font-family: monospace; font-size: 1.1em; white-space: pre-wrap; word-wrap: break-word; }
