@@ -290,10 +290,13 @@ function filterMenu() {
     }); 
 }
 
+// Kode yang sudah diperbaiki:
 function buildDropdowns() { 
     kelasPelangganEl.innerHTML = '<option value="">- Pilih Kelas -</option>'; 
     dbLoyalti.forEach(item => { 
-        kelasPelangganEl.innerHTML += `<option value="${item.KELAS}">${item.KELAS} (${(item.REWARD * 100).toFixed(0)}%)</option>`; 
+        // Mengubah .toFixed(0) menjadi .toFixed(1)
+        const displayPercent = (item.REWARD * 100).toFixed(1); 
+        kelasPelangganEl.innerHTML += `<option value="${item.KELAS}">${item.KELAS} (${displayPercent}%)</option>`; 
     }); 
 }
 
@@ -709,3 +712,4 @@ function renderSimulasi() {
 
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
+
