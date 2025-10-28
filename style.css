@@ -1,74 +1,91 @@
+/* ========================================================== */
+/* KODE CSS STABIL DAN BERSIH (Mengutamakan Stabilitas Layout) */
+/* ========================================================== */
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 20px;
-    overflow-x: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    overflow-x: hidden;
 }
 #loading {
-    font-size: 1.5em;
-    font-weight: bold;
-    text-align: center;
-    margin-top: 100px;
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 100px;
 }
 
 /* --- Layout Desktop (Layar Lebar > 768px) --- */
 @media (min-width: 769px) {
-    .kalkulator-container { display: flex; gap: 20px; }
-    .menu-produk { flex: 2; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
-    .simulasi-order { flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; position: static; transform: none; transition: none; }
-    /* Tombol/Bilah Toggle disembunyikan di desktop */
-    .summary-bar, .close-summary { display: none; }
+    .kalkulator-container { display: flex; gap: 20px; }
+    .menu-produk { flex: 2; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    .simulasi-order { flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; position: static; transform: none; transition: none; }
+    /* Tombol/Bilah Toggle disembunyikan di desktop */
+    .summary-bar, .close-summary { display: none; }
+    
+    /* Item keranjang di desktop menggunakan tata letak flow-root/float */
+    .keranjang-item-list li { 
+        display: flow-root; /* Mengaktifkan float containment */
+        padding: 10px 0;
+        border-bottom: 1px dashed #eee;
+        gap: 0; /* Menghapus gap flex yang mungkin tersisa */
+    }
+    .keranjang-item-info { width: 65%; float: left; padding-right: 10px; }
+    .keranjang-item-harga { width: 35%; float: right; text-align: right; }
 }
 
 /* --- Layout Mobile (Layar Sempit <= 768px) --- */
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-        /* Padding bawah = tinggi summary-bar + margin */
-        padding-bottom: 70px;
-    }
-    .kalkulator-container { display: block; position: relative; }
-    .menu-produk { width: 100%; box-sizing: border-box; margin-bottom: 20px; max-height: none; }
-    .simulasi-order { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; box-shadow: 0 -4px 10px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.3s ease-in-out; overflow-y: auto; z-index: 100; padding: 20px; box-sizing: border-box; border-top-left-radius: 15px; border-top-right-radius: 15px; }
-    .simulasi-order.summary-visible { transform: translateY(0); }
+    body {
+        padding: 10px;
+        padding-bottom: 70px;
+    }
+    .kalkulator-container { display: block; position: relative; }
+    .menu-produk { width: 100%; box-sizing: border-box; margin-bottom: 20px; max-height: none; }
 
-    /* BARU: Style Bilah Ringkasan Bawah */
-    .summary-bar {
-        display: flex; /* Menyusun elemen secara horizontal */
-        justify-content: space-between; /* Harga kiri, panah kanan */
-        align-items: center; /* Vertikal tengah */
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #0056b3; /* Biru lebih gelap */
-        color: white;
-        padding: 10px 15px;
-        box-sizing: border-box;
-        height: 55px; /* Sesuaikan tinggi bilah */
-        box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
-        cursor: pointer;
-        z-index: 101; /* Di atas konten, di bawah panel */
-    }
-    .summary-bar-label {
-        font-size: 0.8em;
-        opacity: 0.8;
-    }
-    .summary-bar-total {
-        font-size: 1.1em;
-        font-weight: bold;
-    }
-    .summary-bar-arrow {
-        font-size: 1.5em;
-        font-weight: bold;
-    }
-    /* AKHIR BARU */
+    /* Panel Simulasi (Slide-up logic) */
+    .simulasi-order { 
+        position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; box-shadow: 0 -4px 10px rgba(0,0,0,0.15); 
+        transform: translateY(100%); transition: transform 0.3s ease-in-out; overflow-y: auto; z-index: 100; padding: 20px; 
+        box-sizing: border-box; border-top-left-radius: 15px; border-top-right-radius: 15px; 
+    }
+    .simulasi-order.summary-visible { transform: translateY(0); }
 
-    /* Tombol Tutup Panel Ringkasan */
-    .close-summary { display: block; position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5em; line-height: 30px; text-align: center; cursor: pointer; color: #555; z-index: 102; /* Di atas panel */ }
-    /* Tombol Toggle mengambang LAMA DIHAPUS */
-    /* .toggle-summary-button { ... } */
+    /* Bilah Ringkasan Bawah (Summary Bar) */
+    .summary-bar {
+        display: flex; /* WAJIB: Memastikan bilah bawah horizontal */
+        justify-content: space-between; 
+        align-items: center; 
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #0056b3; 
+        color: white;
+        padding: 10px 15px;
+        box-sizing: border-box;
+        height: 55px; 
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+        cursor: pointer;
+        z-index: 101; 
+    }
+    .summary-bar-label { font-size: 0.8em; opacity: 0.8; }
+    .summary-bar-total { font-size: 1.1em; font-weight: bold; }
+    .summary-bar-arrow { font-size: 1.5em; font-weight: bold; }
+
+    /* Tombol Tutup Panel Ringkasan */
+    .close-summary { display: block; position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5em; line-height: 30px; text-align: center; cursor: pointer; color: #555; z-index: 102; }
+    
+    /* Item Keranjang di Mobile: TAMPILAN BLOCK / TUMPUK (Untuk Stabilitas) */
+    .keranjang-item-list li {
+        display: block; /* Memastikan kembali ke block default */
+        padding: 8px 0;
+        font-size: 0.9em;
+    }
+    .keranjang-item-info { width: 100%; float: none; padding-right: 0; }
+    .keranjang-item-harga { width: 100%; float: none; text-align: left; margin-top: 5px; }
+
 }
 
 /* --- Style Umum --- */
@@ -98,9 +115,9 @@ body {
 #daftarKeranjang { padding: 0; }
 .keranjang-grup-header { background: #f4f4f4; padding: 8px 10px; font-weight: bold; font-size: 0.9em; border-radius: 4px 4px 0 0; margin-top: 15px; border: 1px solid #ddd; border-bottom: none; }
 .keranjang-item-list { list-style: none; padding: 0; margin: 0; border: 1px solid #ddd; border-top: none; border-bottom: none; }
-.keranjang-item-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9em; gap: 10px; }
-.keranjang-item-info { flex-grow: 1; }
-.keranjang-item-harga { text-align: right; white-space: nowrap; }
+.keranjang-item-list li { padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9em; } 
+
+
 .detail-item-btn { background: none; border: 1px solid #007bff; color: #007bff; padding: 3px 6px; border-radius: 3px; font-size: 0.75em; cursor: pointer; margin-left: 5px; }
 .detail-item-btn:hover { background: #e9f5ff; }
 
@@ -123,9 +140,7 @@ body {
 #ringkasanTotal .grand-total { font-weight: bold; font-size: 1.15em; background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; margin-top: 10px; }
 
 /* Modal Styling */
-.modal { display: none; position: fixed; z-index: 102; /* Lebih tinggi dari panel & bar */ left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+.modal { display: none; position: fixed; z-index: 102; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
 .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
 .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
 .modal-content pre { font-family: monospace; font-size: 1.1em; white-space: pre-wrap; word-wrap: break-word; }
-
-
