@@ -33,18 +33,9 @@ body {
 
 /* --- Style Umum --- */
 
-/* BARU: Style untuk Bilah Pencarian */
-.search-container {
-    margin-bottom: 20px;
-}
-#search-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box; /* Agar padding tidak menambah lebar */
-    font-size: 1em;
-}
+/* Bilah Pencarian */
+.search-container { margin-bottom: 20px; }
+#search-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1em; }
 
 /* Tampilan Menu Item */
 .grup-produk { margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -57,22 +48,22 @@ body {
 .strata-info-btn:hover { background-color: #0056b3; }
 .kartu-produk { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
 .kartu-produk:last-child { border-bottom: none; }
-.nama-item { font-size: 0.9em; font-weight: bold; }
+.nama-item { font-size: 0.9em; font-weight: bold; flex-grow: 1; margin-right: 10px; }
 .harga-item { font-size: 0.8em; color: #555; }
 .input-qty { display: flex; gap: 5px; }
 .input-qty input { width: 50px; text-align: right; border: 1px solid #ccc; border-radius: 4px; padding: 5px; }
-
-/* BARU: Style untuk menyembunyikan item saat filter */
-.kartu-produk.hidden,
-.grup-produk.hidden {
-    display: none;
-}
+.kartu-produk.hidden, .grup-produk.hidden { display: none; }
 
 /* Keranjang & Ringkasan */
 #daftarKeranjang { padding: 0; }
 .keranjang-grup-header { background: #f4f4f4; padding: 8px 10px; font-weight: bold; font-size: 0.9em; border-radius: 4px 4px 0 0; margin-top: 15px; border: 1px solid #ddd; border-bottom: none; }
 .keranjang-item-list { list-style: none; padding: 0; margin: 0; border: 1px solid #ddd; border-top: none; border-bottom: none; }
-.keranjang-item-list li { display: flex; justify-content: space-between; padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9em; }
+.keranjang-item-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px dashed #eee; font-size: 0.9em; gap: 10px; }
+.keranjang-item-info { flex-grow: 1; }
+.keranjang-item-harga { text-align: right; white-space: nowrap; }
+.detail-item-btn { background: none; border: 1px solid #007bff; color: #007bff; padding: 3px 6px; border-radius: 3px; font-size: 0.75em; cursor: pointer; margin-left: 5px; }
+.detail-item-btn:hover { background: #e9f5ff; }
+
 .keranjang-upsell-strata { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px; font-size: 0.85em; color: #555; border-radius: 0 0 4px 4px; margin-bottom: 10px; border-top: 1px dashed #ffe58f; }
 .keranjang-upsell-strata strong { color: #856404; }
 .keranjang-upsell-strata.tertinggi { background: #e6ffed; border-color: #b7ebc2; color: #155724; }
