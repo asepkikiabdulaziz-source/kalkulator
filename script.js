@@ -560,3 +560,4 @@ function renderSimulasi() {
 // --- Mulai aplikasi ---
 
 document.addEventListener('DOMContentLoaded', init);
+
