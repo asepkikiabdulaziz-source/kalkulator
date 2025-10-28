@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Harga Sales</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loading">Memuat data master...</div>
+
+    <div class="kalkulator-container" style="display:none;">
+        
+        <div class="menu-produk">
+            <h2>Pilih Produk</h2>
+            <div id="menuContainer">
+                </div>
+        </div>
+
+        <div class="simulasi-order">
+            <h2>Ringkasan Pesanan</h2>
+
+            <div id="keranjangContainer">
+                <h3>Keranjang</h3>
+                <div id="daftarKeranjang">
+                    <p>(Keranjang kosong)</p>
+                </div>
+            </div>
+
+            <div class="input-tambahan">
+                <label for="kelasPelanggan">Kelas Loyalti:</label>
+                <select id="kelasPelanggan">
+                    </select>
+                
+                <label for="inputVoucher">Voucher (Manual):</label>
+                <input type="number" id="inputVoucher" value="0">
+            </div>
+
+            <div id="upsellRegulerContainer">
+                <h3>💰 Rekomendasi Reguler</h3>
+                <ul id="daftarUpsellReguler">
+                    <li>(Tidak ada rekomendasi)</li>
+                </ul>
+            </div>
+
+            <div id="ringkasanTotal">
+                <div class="total-grup">
+                    <div>Subtotal Bruto (Inc PPN):</div>
+                    <div id="subtotalBruto">Rp 0</div>
+                </div>
+
+                <div class="total-grup diskon-detail">
+                    <div>- Diskon Reguler:</div>
+                    <div id="diskonReguler">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Potongan Strata:</div>
+                    <div id="diskonStrata">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Potongan Tambahan:</div>
+                    <div id="diskonTambahan">Rp 0</div>
+                </div>
+                
+                <hr>
+                <div class="total-grup">
+                    <div>Total Faktur (DPP+PPN):</div>
+                    <div id="totalFaktur">Rp 0</div>
+                </div>
+                <hr>
+
+                <div class="total-grup diskon-detail">
+                    <div>- Diskon COD:</div>
+                    <div id="diskonCOD">Rp 0</div>
+                </div>
+                <div class="total-grup diskon-detail">
+                    <div>- Potongan Voucher:</div>
+                    <div id="potonganVoucher">Rp 0</div>
+                </div>
+
+                <div class="total-grup nett-on-faktur">
+                    <div>Total Nett On-Faktur (Tagihan):</div>
+                    <div id="totalNettOnFaktur">Rp 0</div>
+                </div>
+                
+                <hr>
+                <div class="total-grup diskon-loyalitas">
+                    <div>* Simulasi Cashback Loyalti:</div>
+                    <div id="diskonLoyalti">Rp 0</div>
+                </div>
+                <div class="total-grup grand-total">
+                    <div>* Simulasi Harga Nett Akhir:</div>
+                    <div id="hargaNettAkhir">Rp 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalStrata" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3 id="modalTitle">Info Promo</h3> 
+            <pre id="infoStrataContent"></pre>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
