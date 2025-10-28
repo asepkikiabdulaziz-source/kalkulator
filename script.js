@@ -1,7 +1,6 @@
 // --- KONFIGURASI ---
 // 1. Ganti dengan URL Publikasi Google Sheet "Entire Document" Anda
-const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Pk7_BlX09grO4zbc65vB5tMnaSe494NRK_jsPtMn59VkY1L8-tt8jHBU35LYj_wvpYoRkkWLuq2N/pub?output=csv
-"; 
+const GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4Pk7_BlX09grO4zbc65vB5tMnaSe494NRK_jsPtMn59VkY1L8-tt8jHBU35LYj_wvpYoRkkWLuq2N/pub?output=csv"; 
 
 // 2. Ganti GID ini sesuai GID di URL tab Google Sheet Anda
 const GID_PRODUK = "120893533";
@@ -559,4 +558,5 @@ function renderSimulasi() {
 }
 
 // --- Mulai aplikasi ---
+
 document.addEventListener('DOMContentLoaded', init);
