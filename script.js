@@ -12,12 +12,7 @@ const GID_LOYALTI = "51013430";
 
 const CUSTOM_GROUP_ORDER = ["NEXTAR","WFR-E500","WFR-E01K","WFR-E02K","WFR-E05K","ROL-E500","ROL-E01K","AHH-E500","AHH-E01K","SIP-E500","SIP-E01K","SIP-E02K","NXT-E02K","PST-E500",,"TBK-E02K","TBK-E01K","CSD-E02K-24","CSD-E02K-12"];
                             
-const PPN_RATE = 1.11;
 
-// ==========================================================
-// FILE: script.js - KALKULATOR SIMULASI DISKON GEMINI
-// LOGIKA PERBAIKAN: Menstabilkan perbandingan persentase desimal di Upsell Reguler.
-// ==========================================================
 
 
 const PPN_RATE = 1.11; 
@@ -727,5 +722,6 @@ function renderSimulasi() {
 
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
+
 
 
