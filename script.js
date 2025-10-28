@@ -111,9 +111,43 @@ async function init() {
 }
 
 // --- Fungsi Membangun Tampilan (Menu) ---
+// --- Fungsi Membangun Tampilan (Menu) ---
+// UPDATED: Menambahkan console.log untuk debugging event listener
 function buildMenu() {
-    const groupedProduk = {}; dbProduk.forEach(p => { const group = p.ECERAN || 'LAIN-LAIN'; if (!groupedProduk[group]) groupedProduk[group] = []; groupedProduk[group].push(p); }); menuContainerEl.innerHTML = ''; const sortedGroupNames = Object.keys(groupedProduk).sort(); for (const groupName of sortedGroupNames) { const items = groupedProduk[groupName]; let itemHTML = ''; items.forEach(p => { itemHTML += `<div class="kartu-produk" data-sku="${p.KD_SKU_PARENT}"><div><div class="nama-item">${p.NAMA_SKU_PARENT}</div><div class="harga-item">${formatRupiah(p.HargaKarton)}/Krt | ${p.BOX_PER_CRT} Box/Krt | ${p.PCS_PER_BOX} Pcs/Box</div></div><div class="input-qty"><input type="number" min="0" placeholder="Krt" class="input-krt" data-sku="${p.KD_SKU_PARENT}"><input type="number" min="0" placeholder="Box" class="input-box" data-sku="${p.KD_SKU_PARENT}"></div></div>`; }); const promoInfo = promoTambahanMap.get(groupName); let promoTambahanBtnHTML = ''; if (promoInfo) promoTambahanBtnHTML = `<button class="promo-tambahan-btn" data-group="${groupName}">🎁 Info Promo Tambahan</button>`; let strataInfoBtnHTML = ''; const hasStrataPromo = dbStrata.length > 0 && dbStrata[0].hasOwnProperty(groupName) && dbStrata.some(tier => tier[groupName] > 0); if (hasStrataPromo) strataInfoBtnHTML = `<button class="strata-info-btn" data-stratagroup="${groupName}">Info Strata (${groupName})</button>`; const groupHTML = `<div class="grup-produk"><div class="grup-header"><h3>Grup Strata: ${groupName}</h3><div class="grup-header-tombol">${promoTambahanBtnHTML}${strataInfoBtnHTML}</div></div>${itemHTML}</div>`; menuContainerEl.innerHTML += groupHTML; }
-    menuContainerEl.querySelectorAll('.input-krt, .input-box').forEach(input => { input.addEventListener('change', updateKeranjang); }); menuContainerEl.querySelectorAll('.strata-info-btn').forEach(btn => { btn.addEventListener('click', showStrataInfo); }); menuContainerEl.querySelectorAll('.promo-tambahan-btn').forEach(btn => { btn.addEventListener('click', showPromoTambahanInfo); });
+    const groupedProduk = {}; dbProduk.forEach(p => { const group = p.ECERAN || 'LAIN-LAIN'; if (!groupedProduk[group]) groupedProduk[group] = []; groupedProduk[group].push(p); });
+    menuContainerEl.innerHTML = ''; const sortedGroupNames = Object.keys(groupedProduk).sort();
+
+    console.log("Membangun menu..."); // Debug: Pastikan fungsi ini berjalan
+
+    for (const groupName of sortedGroupNames) {
+        const items = groupedProduk[groupName];
+        let itemHTML = '';
+        items.forEach(p => {
+            itemHTML += `<div class="kartu-produk" data-sku="${p.KD_SKU_PARENT}"><div><div class="nama-item">${p.NAMA_SKU_PARENT}</div><div class="harga-item">${formatRupiah(p.HargaKarton)}/Krt | ${p.BOX_PER_CRT} Box/Krt | ${p.PCS_PER_BOX} Pcs/Box</div></div><div class="input-qty"><input type="number" min="0" placeholder="Krt" class="input-krt" data-sku="${p.KD_SKU_PARENT}"><input type="number" min="0" placeholder="Box" class="input-box" data-sku="${p.KD_SKU_PARENT}"></div></div>`;
+        });
+        const promoInfo = promoTambahanMap.get(groupName); let promoTambahanBtnHTML = ''; if (promoInfo) promoTambahanBtnHTML = `<button class="promo-tambahan-btn" data-group="${groupName}">🎁 Info Promo Tambahan</button>`; let strataInfoBtnHTML = ''; const hasStrataPromo = dbStrata.length > 0 && dbStrata[0].hasOwnProperty(groupName) && dbStrata.some(tier => tier[groupName] > 0); if (hasStrataPromo) strataInfoBtnHTML = `<button class="strata-info-btn" data-stratagroup="${groupName}">Info Strata (${groupName})</button>`; const groupHTML = `<div class="grup-produk"><div class="grup-header"><h3>Grup Strata: ${groupName}</h3><div class="grup-header-tombol">${promoTambahanBtnHTML}${strataInfoBtnHTML}</div></div>${itemHTML}</div>`;
+        menuContainerEl.innerHTML += groupHTML;
+    }
+
+    // --- PEMERIKSAAN EVENT LISTENER ---
+    const inputFields = menuContainerEl.querySelectorAll('.input-krt, .input-box');
+    console.log(`Menemukan ${inputFields.length} input field.`); // Debug: Berapa banyak input yang ditemukan?
+
+    inputFields.forEach((input, index) => {
+        input.addEventListener('change', (event) => { // Pastikan event 'change'
+            console.log(`Input #${index} (${event.target.className}) berubah! Memanggil updateKeranjang...`); // Debug: Apakah event terpicu?
+            updateKeranjang(event);
+        });
+        // console.log(`Listener 'change' ditambahkan ke input #${index}`); // Debug (Opsional, bisa jadi terlalu banyak log)
+    });
+
+    menuContainerEl.querySelectorAll('.strata-info-btn').forEach(btn => {
+        btn.addEventListener('click', showStrataInfo);
+    });
+    menuContainerEl.querySelectorAll('.promo-tambahan-btn').forEach(btn => {
+        btn.addEventListener('click', showPromoTambahanInfo);
+    });
+    console.log("Semua listener menu selesai ditambahkan."); // Debug: Konfirmasi akhir
 }
 function buildDropdowns() { kelasPelangganEl.innerHTML = '<option value="">- Pilih Kelas -</option>'; dbLoyalti.forEach(item => { kelasPelangganEl.innerHTML += `<option value="${item.KELAS}">${item.KELAS} (${item.REWARD * 100}%)</option>`; }); }
 function showStrataInfo(event) { const strataGroup = event.target.dataset.stratagroup; let infoText = `QTY Karton | Potongan/Karton\n----------------------------\n`; let lastShownPotongan = -1; if (dbStrata.length > 0 && dbStrata[0].hasOwnProperty(strataGroup)) { dbStrata.forEach(tier => { const currentPotongan = tier[strataGroup] || 0; if (currentPotongan > 0 && currentPotongan > lastShownPotongan) { infoText += `${tier.QTY} Krt      | ${formatRupiah(currentPotongan)}\n`; lastShownPotongan = currentPotongan; } }); if (lastShownPotongan < 0) infoText += "(Tidak ada potongan aktif untuk grup ini)\n"; } else { infoText = `Tidak ada aturan strata yang ditemukan untuk grup ${strataGroup}.`; } modalTitleEl.innerText = `Info Strata (${strataGroup})`; modalContentEl.innerText = infoText; modalEl.style.display = 'block'; }
@@ -206,3 +240,4 @@ function renderSimulasi() {
 
 // --- Mulai aplikasi ---
 document.addEventListener('DOMContentLoaded', init);
+
