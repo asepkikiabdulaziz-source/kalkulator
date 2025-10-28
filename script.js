@@ -655,11 +655,12 @@ function renderSimulasi() {
 
     // 13. Render Tampilan Keranjang
     renderKeranjang(totalKartonPerEceran);
-}
+
 
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
-c
+
+
 
 
 
