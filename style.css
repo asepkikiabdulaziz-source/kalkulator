@@ -17,18 +17,58 @@ body {
     .kalkulator-container { display: flex; gap: 20px; }
     .menu-produk { flex: 2; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
     .simulasi-order { flex: 1; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; position: static; transform: none; transition: none; }
-    .toggle-summary-button, .close-summary { display: none; }
+    /* Tombol/Bilah Toggle disembunyikan di desktop */
+    .summary-bar, .close-summary { display: none; }
 }
 
 /* --- Layout Mobile (Layar Sempit <= 768px) --- */
 @media (max-width: 768px) {
-    body { padding: 10px; padding-bottom: 80px; }
-    .kalkulator-container { display: block; position: relative; padding-bottom: 60px; }
+    body {
+        padding: 10px;
+        /* Padding bawah = tinggi summary-bar + margin */
+        padding-bottom: 70px;
+    }
+    .kalkulator-container { display: block; position: relative; }
     .menu-produk { width: 100%; box-sizing: border-box; margin-bottom: 20px; max-height: none; }
     .simulasi-order { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: #fff; box-shadow: 0 -4px 10px rgba(0,0,0,0.15); transform: translateY(100%); transition: transform 0.3s ease-in-out; overflow-y: auto; z-index: 100; padding: 20px; box-sizing: border-box; border-top-left-radius: 15px; border-top-right-radius: 15px; }
     .simulasi-order.summary-visible { transform: translateY(0); }
-    .toggle-summary-button { display: block; position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); padding: 12px 25px; background-color: #007bff; color: white; border: none; border-radius: 25px; font-size: 1em; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 101; }
-    .close-summary { display: block; position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5em; line-height: 30px; text-align: center; cursor: pointer; color: #555; }
+
+    /* BARU: Style Bilah Ringkasan Bawah */
+    .summary-bar {
+        display: flex; /* Menyusun elemen secara horizontal */
+        justify-content: space-between; /* Harga kiri, panah kanan */
+        align-items: center; /* Vertikal tengah */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #0056b3; /* Biru lebih gelap */
+        color: white;
+        padding: 10px 15px;
+        box-sizing: border-box;
+        height: 55px; /* Sesuaikan tinggi bilah */
+        box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+        cursor: pointer;
+        z-index: 101; /* Di atas konten, di bawah panel */
+    }
+    .summary-bar-label {
+        font-size: 0.8em;
+        opacity: 0.8;
+    }
+    .summary-bar-total {
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+    .summary-bar-arrow {
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+    /* AKHIR BARU */
+
+    /* Tombol Tutup Panel Ringkasan */
+    .close-summary { display: block; position: absolute; top: 10px; right: 15px; background: #eee; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 1.5em; line-height: 30px; text-align: center; cursor: pointer; color: #555; z-index: 102; /* Di atas panel */ }
+    /* Tombol Toggle mengambang LAMA DIHAPUS */
+    /* .toggle-summary-button { ... } */
 }
 
 /* --- Style Umum --- */
@@ -78,33 +118,12 @@ body {
 .btn-reset:hover { background-color: #c9302c; }
 #ringkasanTotal .total-grup { display: flex; justify-content: space-between; padding: 8px 5px; font-size: 0.95em; }
 #ringkasanTotal .diskon-detail { color: #d9534f; font-size: 0.9em; }
-#ringkasanTotal .pembayaran { color: #6c757d; font-size: 0.9em;} /* Style untuk voucher */
-/* #ringkasanTotal .diskon-loyalitas { ... } -> Dihapus */
+#ringkasanTotal .pembayaran { color: #6c757d; font-size: 0.9em;}
 #ringkasanTotal .nett-on-faktur { font-weight: bold; font-size: 1.1em; background: #f0f0f0; padding: 10px; border-radius: 4px; margin-top: 5px; }
-#ringkasanTotal .grand-total { /* Style untuk Sisa Tagihan */
-    font-weight: bold;
-    font-size: 1.15em;
-    background: #d4edda;
-    color: #155724;
-    padding: 12px;
-    border-radius: 4px;
-    margin-top: 10px;
-}
+#ringkasanTotal .grand-total { font-weight: bold; font-size: 1.15em; background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; margin-top: 10px; }
 
 /* Modal Styling */
-.modal {
-    display: none;
-    position: fixed;
-    /* BARU: Pastikan modal muncul di lapisan paling atas */
-    z-index: 102; /* Lebih tinggi dari z-index panel ringkasan (100) */
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-.modal-content { /* ... (sisa style modal tidak berubah) ... */ background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
-.close-modal { /* ... (sisa style modal tidak berubah) ... */ color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-.modal-content pre { /* ... (sisa style modal tidak berubah) ... */ font-family: monospace; font-size: 1.1em; white-space: pre-wrap; word-wrap: break-word; }
-
+.modal { display: none; position: fixed; z-index: 102; /* Lebih tinggi dari panel & bar */ left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+.close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.modal-content pre { font-family: monospace; font-size: 1.1em; white-space: pre-wrap; word-wrap: break-word; }
