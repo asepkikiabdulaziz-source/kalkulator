@@ -14,6 +14,7 @@ const CUSTOM_GROUP_ORDER = ["NEXTAR","WFR-E500","WFR-E01K","WFR-E02K","WFR-E05K"
                             
 const PPN_RATE = 1.11;
 
+
 // --- Variabel Global Database ---
 let dbProduk = new Map();
 let dbReguler = [];
@@ -54,8 +55,8 @@ async function init() {
 function buildMenu() { const groupedProduk = {}; dbProduk.forEach(p => { const group = p.ECERAN || 'LAIN-LAIN'; if (!groupedProduk[group]) groupedProduk[group] = []; groupedProduk[group].push(p); }); menuContainerEl.innerHTML = ''; const displayedGroups = new Set(); let finalGroupOrder = []; CUSTOM_GROUP_ORDER.forEach(groupName => { if (groupedProduk[groupName]) { finalGroupOrder.push(groupName); displayedGroups.add(groupName); } }); Object.keys(groupedProduk).sort().forEach(groupName => { if (!displayedGroups.has(groupName)) finalGroupOrder.push(groupName); }); console.log("Urutan Grup Menu:", finalGroupOrder); for (const groupName of finalGroupOrder) { const items = groupedProduk[groupName]; let itemHTML = ''; items.forEach(p => { itemHTML += `<div class="kartu-produk" data-sku="${String(p.KD_SKU_PARENT)}"><div><div class="nama-item">${p.NAMA_SKU_PARENT}</div><div class="harga-item">${formatRupiah(p.HargaKarton)}/Krt | ${p.BOX_PER_CRT} Box/Krt | ${p.PCS_PER_BOX} Pcs/Box</div></div><div class="input-qty"><input type="number" min="0" placeholder="Krt" class="input-krt" data-sku="${String(p.KD_SKU_PARENT)}"><input type="number" min="0" placeholder="Box" class="input-box" data-sku="${String(p.KD_SKU_PARENT)}"></div></div>`; }); const promoInfo = promoTambahanMap.get(groupName); let promoTambahanBtnHTML = ''; if (promoInfo) promoTambahanBtnHTML = `<button class="promo-tambahan-btn" data-group="${groupName}">🎁 Info Promo Tambahan</button>`; let strataInfoBtnHTML = ''; const hasStrataPromo = dbStrata.length > 0 && dbStrata[0].hasOwnProperty(groupName) && dbStrata.some(tier => tier[groupName] > 0); if (hasStrataPromo) strataInfoBtnHTML = `<button class="strata-info-btn" data-stratagroup="${groupName}">Info Strata (${groupName})</button>`; const groupHTML = `<div class="grup-produk" data-group-name="${groupName}"><div class="grup-header"><h3>Grup Strata: ${groupName}</h3><div class="grup-header-tombol">${promoTambahanBtnHTML}${strataInfoBtnHTML}</div></div>${itemHTML}</div>`; menuContainerEl.innerHTML += groupHTML; } menuContainerEl.querySelectorAll('.input-krt, .input-box').forEach(input => { input.addEventListener('change', updateKeranjang); }); menuContainerEl.querySelectorAll('.strata-info-btn').forEach(btn => { btn.addEventListener('click', showStrataInfo); }); menuContainerEl.querySelectorAll('.promo-tambahan-btn').forEach(btn => { btn.addEventListener('click', showPromoTambahanInfo); }); }
 function filterMenu() { const searchTerm = searchInputEl.value.toLowerCase().trim(); const productCards = menuContainerEl.querySelectorAll('.kartu-produk'); const groupSections = menuContainerEl.querySelectorAll('.grup-produk'); productCards.forEach(card => { const productName = card.querySelector('.nama-item').textContent.toLowerCase(); if (productName.includes(searchTerm)) card.classList.remove('hidden'); else card.classList.add('hidden'); }); groupSections.forEach(group => { const visibleItemsInGroup = group.querySelectorAll('.kartu-produk:not(.hidden)'); if (visibleItemsInGroup.length === 0) group.classList.add('hidden'); else group.classList.remove('hidden'); }); }
 function buildDropdowns() { kelasPelangganEl.innerHTML = '<option value="">- Pilih Kelas -</option>'; dbLoyalti.forEach(item => { kelasPelangganEl.innerHTML += `<option value="${item.KELAS}">${item.KELAS} (${item.REWARD * 100}%)</option>`; }); }
-function showStrataInfo(event) { const strataGroup = event.target.dataset.stratagroup; let infoText = `QTY Karton | Potongan/Karton (sblm PPN)\n----------------------------------\n`; let lastShownPotongan = -1; if (dbStrata.length > 0 && dbStrata[0].hasOwnProperty(strataGroup)) { dbStrata.forEach(tier => { const currentPotongan = tier[strataGroup] || 0; if (currentPotongan > 0 && currentPotongan > lastShownPotongan) { infoText += `${tier.QTY} Krt      | ${formatRupiah(currentPotongan)}\n`; lastShownPotongan = currentPotongan; } }); if (lastShownPotongan < 0) infoText += "(Tidak ada potongan aktif untuk grup ini)\n"; } else { infoText = `Tidak ada aturan strata yang ditemukan untuk grup ${strataGroup}.`; } modalTitleEl.innerText = `Info Strata (${strataGroup})`; modalContentEl.innerText = infoText; modalEl.style.display = 'block'; }
-function showPromoTambahanInfo(event) { const groupName = event.target.dataset.group; const promoInfo = promoTambahanMap.get(groupName); let infoText = ""; if (promoInfo) { infoText += `Deskripsi    : Promo ${promoInfo.GROUP}\nMinimal Qty  : ${promoInfo.QTY} Karton\nMinimal Item : ${promoInfo.ITEM} item berbeda\nPotongan     : ${formatRupiah(promoInfo.POT)} / Karton (sblm PPN)\n`; } else { infoText = `Tidak ada promo tambahan untuk grup ${groupName}.`; } modalTitleEl.innerText = `Info Promo Tambahan (${groupName})`; modalContentEl.innerText = infoText; modalEl.style.display = 'block'; }
+function showStrataInfo(event) { const strataGroup = event.target.dataset.stratagroup; let infoText = `QTY Karton | Potongan/Karton\n----------------------------\n`; let lastShownPotongan = -1; if (dbStrata.length > 0 && dbStrata[0].hasOwnProperty(strataGroup)) { dbStrata.forEach(tier => { const currentPotongan = tier[strataGroup] || 0; if (currentPotongan > 0 && currentPotongan > lastShownPotongan) { infoText += `${tier.QTY} Krt      | ${formatRupiah(currentPotongan)}\n`; lastShownPotongan = currentPotongan; } }); if (lastShownPotongan < 0) infoText += "(Tidak ada potongan aktif untuk grup ini)\n"; } else { infoText = `Tidak ada aturan strata yang ditemukan untuk grup ${strataGroup}.`; } modalTitleEl.innerText = `Info Strata (${strataGroup})`; modalContentEl.innerText = infoText; modalEl.style.display = 'block'; }
+function showPromoTambahanInfo(event) { const groupName = event.target.dataset.group; const promoInfo = promoTambahanMap.get(groupName); let infoText = ""; if (promoInfo) { infoText += `Deskripsi    : Promo ${promoInfo.GROUP}\nMinimal Qty  : ${promoInfo.QTY} Karton\nMinimal Item : ${promoInfo.ITEM} item berbeda\nPotongan     : ${formatRupiah(promoInfo.POT)} / Karton\n`; } else { infoText = `Tidak ada promo tambahan untuk grup ${groupName}.`; } modalTitleEl.innerText = `Info Promo Tambahan (${groupName})`; modalContentEl.innerText = infoText; modalEl.style.display = 'block'; }
 function resetAplikasi() { keranjang.clear(); menuContainerEl.querySelectorAll('.input-krt, .input-box').forEach(input => { input.value = ''; }); kelasPelangganEl.value = ''; inputVoucherEl.value = '0'; searchInputEl.value = ''; filterMenu(); renderSimulasi(); if (summaryPanelEl.classList.contains('summary-visible')) toggleSummaryPanel(); }
 function updateKeranjang(event) { const sku = String(event.target.dataset.sku); const isKarton = event.target.classList.contains('input-krt'); const value = parseInt(event.target.value) || 0; let item = keranjang.get(sku) || { sku: sku, qtyKarton: 0, qtyBox: 0, diskonDetail: {} }; if (isKarton) item.qtyKarton = value; else item.qtyBox = value; if (item.qtyKarton > 0 || item.qtyBox > 0) keranjang.set(sku, item); else keranjang.delete(sku); renderSimulasi(); }
 
@@ -89,7 +90,7 @@ function renderKeranjang(totalKartonPerEceran) {
         let upsellStrataHTML = '';
         if (nextUpsellTierData) {
             const qtyDibutuhkan = nextUpsellTierData.QTY - qtyGrup;
-            upsellStrataHTML = `<div class="keranjang-upsell-strata">📈 Tambah <strong>${formatAngka(qtyDibutuhkan)} Krt</strong> lagi (total ${nextUpsellTierData.QTY} Krt) untuk dapat potongan ${formatRupiah(nextUpsellTierData[eceran])}/Krt (sblm PPN).</div>`;
+            upsellStrataHTML = `<div class="keranjang-upsell-strata">📈 Tambah <strong>${formatAngka(qtyDibutuhkan)} Krt</strong> lagi (total ${nextUpsellTierData.QTY} Krt) untuk dapat potongan ${formatRupiah(nextUpsellTierData[eceran])}/Krt.</div>`; // Tampilkan potongan dari tabel
         } else {
             upsellStrataHTML = `<div class="keranjang-upsell-strata tertinggi">🏆 Anda sudah di tier Strata tertinggi.</div>`;
         }
@@ -102,20 +103,19 @@ function renderKeranjang(totalKartonPerEceran) {
 function renderUpsellReguler(totalBrutoPerGrup_belum_ppn) { let recommendations = []; for (const grup in totalBrutoPerGrup_belum_ppn) { const brutoGrup_bppn = totalBrutoPerGrup_belum_ppn[grup]; let currentTierIndex = -1; for (let i = 0; i < dbReguler.length; i++) { if (brutoGrup_bppn >= dbReguler[i]['NOMINAL FAKTUR']) { currentTierIndex = i; break; } } let nextTier = null; if (currentTierIndex === -1 && dbReguler.length > 0) { const lowestTier = dbReguler[dbReguler.length - 1]; if(lowestTier[grup] > 0) nextTier = lowestTier; } else if (currentTierIndex > 0) { const higherTier = dbReguler[currentTierIndex - 1]; if(higherTier[grup] > (dbReguler[currentTierIndex][grup] || 0)) nextTier = higherTier; } if (nextTier) { const rpDibutuhkan_bppn = nextTier['NOMINAL FAKTUR'] - brutoGrup_bppn; if (rpDibutuhkan_bppn > 0) { const diskonBaru = nextTier[grup] * 100; recommendations.push(`<li><strong>${grup}:</strong> Tambah Bruto (sblm PPN) <strong>${formatRupiah(rpDibutuhkan_bppn)}</strong> lagi (total ${formatRupiah(nextTier['NOMINAL FAKTUR'])}) untuk dapat diskon ${formatAngka(diskonBaru)}%.</li>`); } } else if (currentTierIndex === 0) recommendations.push(`<li><strong>${grup}:</strong> 🏆 Anda sudah di tier Reguler tertinggi.</li>`); } if (recommendations.length > 0) upsellRegulerEl.innerHTML = recommendations.join(''); else upsellRegulerEl.innerHTML = '<li>(Tambahkan item untuk melihat rekomendasi)</li>'; }
 
 // --- FUNGSI DETAIL DISKON (Pop-up) ---
-// UPDATED: Menampilkan potongan Strata & Tambahan sebelum PPN
 function showDiscountDetails(event) {
     const sku = String(event.target.dataset.sku); const keranjangItem = keranjang.get(sku); const produk = dbProduk.get(sku); if (!keranjangItem || !produk) { alert("Gagal mendapatkan detail item."); return; }
     const detail = keranjangItem.diskonDetail || {};
     let infoText = `Rincian Harga Nett per Karton untuk:\n${produk.NAMA_SKU_PARENT}\n--------------------------------------\n`;
     infoText += `Harga Awal (Inc PPN) : ${formatRupiah(produk.HargaKarton)}\n`;
-    infoText += `- Diskon Reguler     : ${formatRupiah(detail.regulerPerKarton || 0)} (Inc PPN)\n`;
+    infoText += `- Diskon Reguler     : ${formatRupiah(detail.regulerPerKarton || 0)}\n`; // Ini sudah Inc PPN
     // Menampilkan potongan SEBELUM PPN
-    infoText += `- Potongan Strata    : ${formatRupiah(detail.strataPerKarton_bppn || 0)} (sblm PPN)\n`;
-    infoText += `- Potongan Tambahan  : ${formatRupiah(detail.tambahanPerKarton_bppn || 0)} (sblm PPN)\n`;
-    // Harga sebelum COD (Inc PPN) dihitung ulang di sini untuk kejelasan
+    infoText += `- Potongan Strata    : ${formatRupiah(detail.strataPerKarton_bppn || 0)}\n`;
+    infoText += `- Potongan Tambahan  : ${formatRupiah(detail.tambahanPerKarton_bppn || 0)}\n`;
+    // Harga sebelum COD (Inc PPN)
     const hargaSebelumCOD = produk.HargaKarton - (detail.regulerPerKarton || 0) - (detail.strataPerKarton_bppn * PPN_RATE || 0) - (detail.tambahanPerKarton_bppn * PPN_RATE || 0);
     infoText += `--------------------------------------\nSubtotal (Inc PPN)   : ${formatRupiah(hargaSebelumCOD)}\n`;
-    infoText += `- Diskon COD         : ${formatRupiah(detail.codPerKarton || 0)} (Inc PPN)\n`;
+    infoText += `- Diskon COD         : ${formatRupiah(detail.codPerKarton || 0)}\n`; // Ini sudah Inc PPN
     infoText += `======================================\nHARGA NETT ON-FAKTUR : ${formatRupiah(detail.hargaNettKarton || 0)}\n\n`;
     if (produk.ITEM_LOYALTI === 'Y') {
         infoText += `--- Simulasi Tambahan ---\n`;
@@ -163,7 +163,7 @@ function renderSimulasi() {
     diskonTambahanEl.innerText = `- ${formatRupiah(totalPotonganTambahan_bppn)}`;
 
     // 6. Hitung Total Faktur (Inc PPN, sebelum COD)
-    // Pengurangan Strata & Tambahan harus dikalikan PPN Rate
+    // Pengurangan Strata & Tambahan menggunakan nilai _bppn * PPN_RATE
     const totalFaktur = subtotalBruto - totalDiskonReguler - (totalPotonganStrata_bppn * PPN_RATE) - (totalPotonganTambahan_bppn * PPN_RATE);
     totalFakturEl.innerText = formatRupiah(totalFaktur);
 
@@ -203,9 +203,11 @@ function renderSimulasi() {
 
         // Simpan detail Inc PPN dan _bppn
         item.diskonDetail = {
+            // Basis Belum PPN (untuk detail pop-up)
+            strataPerKarton_bppn: potonganStrataItem_bppn,
+            tambahanPerKarton_bppn: potonganTambahanItem_bppn,
+            // Basis Inc PPN (untuk tampilan & kalkulasi akhir)
             regulerPerKarton: diskonRegulerItem_inc_ppn,
-            strataPerKarton_bppn: potonganStrataItem_bppn, // Simpan _bppn untuk pop up
-            tambahanPerKarton_bppn: potonganTambahanItem_bppn, // Simpan _bppn untuk pop up
             codPerKarton: diskonCODItem_inc_ppn,
             hargaNettKarton: hargaNettKartonItem_inc_ppn,
             loyaltiPerKarton: diskonLoyaltiItem,
@@ -223,6 +225,8 @@ function renderSimulasi() {
     // 9. Hitung Harga Nett On Faktur - TOTAL (Tagihan Akhir sebelum voucher)
     const hargaNettOnFaktur = totalFaktur - totalDiskonCOD; // Total Faktur dan Diskon COD sudah Inc PPN
     totalNettOnFakturEl.innerText = formatRupiah(hargaNettOnFaktur);
+
+    // 10 & 11 Dihapus dari Ringkasan Total
 
     // Hitung dan tampilkan Sisa Tagihan
     const sisaTagihan = hargaNettOnFaktur - nilaiVoucherTerpakai;
