@@ -163,18 +163,17 @@ async function init() {
         dbReguler = cleanTierData(regData, 'NOMINAL FAKTUR'); 
         dbCOD = cleanTierData(codData, 'NOMINAL FAKTUR'); 
         
-        // START: Perubahan untuk Multi-Tier Promo Tambahan
+        // PENGUATAN TIPE DATA DAN SORTING TERTINGGI (Untuk Akurasi Diskon)
         dbTambahan = tamData.map(promo => ({
             ...promo,
-            QTY: parseInt(promo.QTY) || 0,
-            ITEM: parseInt(promo.ITEM) || 0,
-            POT: parseFloat(promo.POT) || 0 
+            QTY: Number(promo.QTY) || 0, // PENGUATAN
+            ITEM: Number(promo.ITEM) || 0,
+            POT: Number(promo.POT) || 0 
         })).sort((a, b) => {
-            // Urutkan tier: GROUP, lalu QTY (Menurun), lalu ITEM (Menurun)
             if (a.GROUP !== b.GROUP) return a.GROUP.localeCompare(b.GROUP);
-            if (b.QTY !== a.QTY) return b.QTY - a.QTY;
+            if (b.QTY !== a.QTY) return b.QTY - a.QTY; // QTY Menurun
             if (b.ITEM !== a.ITEM) return b.ITEM - a.ITEM;
-            return b.POT - a.POT; // Urutan Potongan Menurun (tie-breaker)
+            return b.POT - a.POT;
         }); 
 
         promoTambahanMap.clear(); 
@@ -186,7 +185,6 @@ async function init() {
                 promoTambahanMap.get(promo.GROUP).push(promo);
             }
         }); 
-        // END: Perubahan untuk Multi-Tier Promo Tambahan
         
         dbLoyalti = loyData; 
         dbStrata = cleanStrataData(strataData); 
@@ -195,7 +193,7 @@ async function init() {
         buildMenu(); 
         buildDropdowns();
 
-        // PERBAIKAN: Set atribut size untuk dropdown Loyalti
+        // PERBAIKAN: Tampilan Dropdown Loyalti (Membatasi tinggi 3 baris)
         kelasPelangganEl.setAttribute('size', '3'); 
 
         loadingEl.style.display = 'none'; 
@@ -340,7 +338,7 @@ function showStrataInfo(event) { 
     modalEl.style.display = 'block'; 
 }
 
-// START: showPromoTambahanInfo dengan tabel HTML (menggunakan innerHTML)
+// PERBAIKAN: showPromoTambahanInfo dengan tabel HTML
 function showPromoTambahanInfo(event) { 
     const groupName = event.target.dataset.group; 
     const promoTiers = promoTambahanMap.get(groupName); 
@@ -351,7 +349,6 @@ function showPromoTambahanInfo(event) {
         infoHTML += `<div style="overflow-x: auto;">`;
         infoHTML += `<table style="width: 100%; border-collapse: collapse; font-size: 0.95em;">`;
         
-        // Membuat Header Tabel
         infoHTML += `
             <thead>
                 <tr style="background-color: #f2f2f2;">
@@ -364,11 +361,9 @@ function showPromoTambahanInfo(event) {
             <tbody>
         `;
         
-        // Loop untuk setiap tingkatan (tier) promosi
         promoTiers.forEach(promo => { 
             const potonganRupiah = formatRupiah(promo.POT);
             
-            // Tambahkan baris data (bertingkat)
             infoHTML += `
                 <tr>
                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${promo.GROUP}</td>
@@ -388,7 +383,6 @@ function showPromoTambahanInfo(event) {
     modalContentEl.innerHTML = infoHTML; 
     modalEl.style.display = 'block'; 
 }
-// END: showPromoTambahanInfo
 
 function resetAplikasi() { 
     keranjang.clear(); 
@@ -458,7 +452,7 @@ function showDiscountDetails(event) {
     modalEl.style.display = 'block';
 }
 
-// START: renderKeranjang dengan logika upsell tambahan dan kontrol pesan Strata
+// PERBAIKAN: renderKeranjang dengan logika upsell tambahan dan kontrol pesan Strata
 function renderKeranjang(totalKartonPerEceran) {
     if (keranjang.size === 0) { keranjangEl.innerHTML = '<p>(Keranjang kosong)</p>'; return; }
     
@@ -511,7 +505,7 @@ function renderKeranjang(totalKartonPerEceran) {
         itemListHTML += '</ul>';
         
         // ------------------------------------------
-        // START: Logika Upsell Promo Tambahan
+        // A. Logika Upsell Promo Tambahan
         // ------------------------------------------
         const tiersTambahan = promoTambahanMap.get(eceran);
         let nextUpsellTambahanHTML = '';
@@ -533,7 +527,7 @@ function renderKeranjang(totalKartonPerEceran) {
                 const isQtyMet = qtyGrup >= promo.QTY;
                 const isItemMet = distinctItemsInGroup >= promo.ITEM;
                 
-                // Cari tier yang belum terpenuhi salah satu syaratnya (QTY atau ITEM)
+                // Cari tier yang belum terpenuhi salah satu syaratnya, DAN potongannya lebih tinggi
                 return (!isQtyMet || !isItemMet) && promo.POT > currentPotonganTambahan;
             });
 
@@ -559,11 +553,10 @@ function renderKeranjang(totalKartonPerEceran) {
                  nextUpsellTambahanHTML = `<div class="keranjang-upsell-tambahan tertinggi">🏆 Anda sudah di tier Promo Tambahan tertinggi.</div>`;
             }
         }
-        // END: Logika Upsell Promo Tambahan
         // ------------------------------------------
 
         // ------------------------------------------
-        // START: Logika Upsell Strata (dengan kontrol pesan)
+        // B. Logika Upsell Strata (dengan kontrol pesan)
         // ------------------------------------------
         let currentPotonganStrata = 0; 
         const hasAnyStrata = dbStrata.some(tier => tier.hasOwnProperty(eceran) && tier[eceran] > 0);
@@ -582,18 +575,14 @@ function renderKeranjang(totalKartonPerEceran) {
         } else if (hasAnyStrata) { 
              upsellStrataHTML = `<div class="keranjang-upsell-strata">Tambahkan ${eceran} untuk mendapatkan potongan Strata.</div>`;
         } 
-        // Jika tidak ada skema Strata, upsellStrataHTML tetap kosong ('')
 
         keranjangEl.innerHTML += grupHTML + itemListHTML + nextUpsellTambahanHTML + upsellStrataHTML;
-        // END: Logika Upsell Strata
-        // ------------------------------------------
     }
     
     keranjangEl.querySelectorAll('.detail-item-btn').forEach(btn => { 
         btn.addEventListener('click', showDiscountDetails); 
     });
 }
-// END: renderKeranjang
 
 
 function renderUpsellReguler(totalBrutoPerGrup_belum_ppn) { 
@@ -733,14 +722,14 @@ function renderSimulasi() {
     let totalPotonganTambahan = 0; 
     let potonganTambahanPerKarton_inc_ppn = {}; 
     
-    // START: Perubahan Logika Pencarian Tier Terbaik
+    // PERBAIKAN LOGIKA DISKON TIER TERBAIK
     promoTambahanMap.forEach((tiers, grupPromo) => { 
         const qtyGroupActual = parseFloat(totalKartonPerEceran[grupPromo]) || 0; 
         const distinctItemsInGroup = distinctItemsPerEceran[grupPromo]?.size || 0; 
         
         let bestPotongan_inc_ppn = 0;
         
-        // Cari tier pertama yang memenuhi syarat (sudah diurutkan QTY tertinggi di init)
+        // Cari tier pertama yang memenuhi syarat (Sudah diurutkan QTY tertinggi di init)
         const foundTier = tiers.find(promo => {
             return qtyGroupActual >= promo.QTY && 
                  distinctItemsInGroup >= promo.ITEM && 
@@ -756,7 +745,6 @@ function renderSimulasi() {
             totalPotonganTambahan += qtyGroupActual * bestPotongan_inc_ppn; 
         } 
     }); 
-    // END: Perubahan Logika Pencarian Tier Terbaik
     
     diskonTambahanEl.innerText = `- ${formatRupiah(totalPotonganTambahan)}`; 
 
@@ -847,6 +835,5 @@ function renderSimulasi() {
     summaryBarTotalEl.innerText = formatRupiah(sisaTagihan);
     renderKeranjang(totalKartonPerEceran);
 }
-
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
