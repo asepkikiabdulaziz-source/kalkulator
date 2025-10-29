@@ -160,18 +160,36 @@ async function init() {
         }); 
 
         // 2. Inisialisasi Database Lain
-        dbReguler = cleanTierData(regData, 'NOMINAL FAKTUR'); 
-        dbCOD = cleanTierData(codData, 'NOMINAL FAKTUR'); 
-        dbTambahan = tamData.map(promo => ({
-            ...promo,
-            QTY: parseInt(promo.QTY) || 0,
-            ITEM: parseInt(promo.ITEM) || 0,
-            POT: parseFloat(promo.POT) || 0 
-        })); 
-        promoTambahanMap.clear(); 
-        dbTambahan.forEach(promo => { if (promo.GROUP) promoTambahanMap.set(promo.GROUP, promo); }); 
-        dbLoyalti = loyData; 
-        dbStrata = cleanStrataData(strataData); 
+    dbReguler = cleanTierData(regData, 'NOMINAL FAKTUR'); 
+    dbCOD = cleanTierData(codData, 'NOMINAL FAKTUR'); 
+    
+    // START PERUBAHAN DI SINI
+    dbTambahan = tamData.map(promo => ({
+        ...promo,
+        QTY: parseInt(promo.QTY) || 0,
+        ITEM: parseInt(promo.ITEM) || 0,
+        POT: parseFloat(promo.POT) || 0 
+    })).sort((a, b) => {
+        // Urutkan berdasarkan GROUP, lalu QTY dan ITEM secara menurun
+        if (a.GROUP !== b.GROUP) return a.GROUP.localeCompare(b.GROUP);
+        if (b.QTY !== a.QTY) return b.QTY - a.QTY;
+        return b.ITEM - a.ITEM;
+    });
+    
+    promoTambahanMap.clear(); 
+    dbTambahan.forEach(promo => { 
+        if (promo.GROUP) {
+            if (!promoTambahanMap.has(promo.GROUP)) {
+                promoTambahanMap.set(promo.GROUP, []);
+            }
+            promoTambahanMap.get(promo.GROUP).push(promo);
+        }
+    }); 
+    // END PERUBAHAN
+    
+    dbLoyalti = loyData; 
+    dbStrata = cleanStrataData(strataData); 
+
 
         // 3. Membangun Tampilan & Listeners
         buildMenu(); 
@@ -319,16 +337,30 @@ function showStrataInfo(event) {
     modalEl.style.display = 'block'; 
 }
 
+// --- FUNGSI INISIALISASI & UI (Fungsi showPromoTambahanInfo) ---
+
 function showPromoTambahanInfo(event) { 
     const groupName = event.target.dataset.group; 
-    const promoInfo = promoTambahanMap.get(groupName); 
-    let infoText = "Tidak ada promo tambahan."; 
+    // promoInfo sekarang adalah ARRAY of tiers
+    const promoTiers = promoTambahanMap.get(groupName); 
     
-    if (promoInfo) { 
-        infoText = `Deskripsi    : Promo ${promoInfo.GROUP}\n`;
-        infoText += `Minimal Qty  : ${promoInfo.QTY} Karton\n`;
-        infoText += `Minimal Item : ${promoInfo.ITEM} item berbeda\n`;
-        infoText += `Potongan     : ${formatRupiah(promoInfo.POT)} / Karton (Inc PPN)\n`;
+    let infoText = ""; 
+    
+    if (promoTiers && promoTiers.length > 0) { 
+        // Header Tabel (sesuai permintaan format)
+        infoText += `GROUP | Minimal Qty | Minimal Item | Potongan\n`;
+        infoText += `------|-------------|--------------|----------\n`;
+
+        // Loop untuk setiap tingkatan (tier) promosi
+        promoTiers.forEach(promo => {
+            const potonganRupiah = formatRupiah(promo.POT);
+            
+            // Format baris tabel:
+            infoText += `${promo.GROUP} | ${promo.QTY} Karton | ${promo.ITEM} item berbeda | ${potonganRupiah} / Karton (Inc PPN)\n`;
+        });
+
+    } else {
+        infoText = "Tidak ada promo tambahan untuk grup ini."; 
     } 
     
     modalTitleEl.innerText = `Info Promo Tambahan (${groupName})`; 
@@ -719,6 +751,7 @@ function renderSimulasi() {
 
 // Panggil init saat DOM selesai dimuat
 document.addEventListener('DOMContentLoaded', init);
+
 
 
 
